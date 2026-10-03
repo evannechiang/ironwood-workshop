@@ -1,1 +1,327 @@
-# ironwood-workshop
+[ironwood-sprint1-prototype.html](https://github.com/user-attachments/files/32988633/ironwood-sprint1-prototype.html)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ironwood Community Workshop – Sprint 1 Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f6f3;--panel:#ffffff;--ink:#1f2328;--muted:#5f6670;--line:#d8dad6;--safety:#f2b705;--bad:#b42318;--badbg:#fdecea;--ok:#1e7a46;--okbg:#e7f5ec;--chip:#eef0ec;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171a;--panel:#1d2024;--ink:#ececea;--muted:#a3a9b1;--line:#30353b;--bad:#ff8a80;--badbg:#3a1f1d;--ok:#7fd6a2;--okbg:#1b3125;--chip:#262a2f}}
+:root[data-theme="dark"]{--bg:#15171a;--panel:#1d2024;--ink:#ececea;--muted:#a3a9b1;--line:#30353b;--bad:#ff8a80;--badbg:#3a1f1d;--ok:#7fd6a2;--okbg:#1b3125;--chip:#262a2f}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Barlow,system-ui,sans-serif}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:600;line-height:1.1;margin:0 0 .5rem}
+h1{font-size:2.3rem}h2{font-size:1.6rem}h3{font-size:1.2rem}
+.stripe{height:8px;background:repeating-linear-gradient(-45deg,var(--safety) 0 14px,#1f2328 14px 28px)}
+header{background:var(--panel);border-bottom:1px solid var(--line)}
+.bar{max-width:1000px;margin:0 auto;padding:.7rem 1.25rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.brand{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.45rem;letter-spacing:.02em}
+.brand small{font-weight:500;color:var(--muted);font-size:1rem;margin-left:.35rem}
+nav{display:flex;gap:.3rem;flex-wrap:wrap;margin-left:auto}
+nav button,.linkbtn{background:none;border:0;color:var(--ink);font:inherit;font-weight:500;padding:.4rem .7rem;border-radius:6px;cursor:pointer}
+nav button[aria-current="page"]{background:var(--ink);color:var(--panel)}
+.role{font-size:.9rem;color:var(--muted)}
+main{max-width:1000px;margin:0 auto;padding:1.5rem 1.25rem 3rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.4rem;margin:1rem 0}
+.muted{color:var(--muted)}
+label{display:block;font-weight:600;margin:.9rem 0 .3rem}
+input,select{width:100%;max-width:360px;padding:.6rem .7rem;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+.btn{display:inline-block;margin-top:1rem;padding:.65rem 1.2rem;border:2px solid var(--ink);border-radius:6px;background:var(--ink);color:var(--panel);font:inherit;font-weight:600;cursor:pointer}
+.btn.secondary{background:transparent;color:var(--ink)}
+.btn+.btn{margin-left:.5rem}
+:focus-visible{outline:3px solid var(--safety);outline-offset:2px}
+.msg{border-radius:6px;padding:.75rem 1rem;margin:1rem 0;font-weight:500}
+.msg.bad{background:var(--badbg);color:var(--bad);border-left:5px solid var(--bad)}
+.msg.ok{background:var(--okbg);color:var(--ok);border-left:5px solid var(--ok)}
+.msg small{display:block;font-weight:400;opacity:.85;margin-top:.15rem}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{text-align:left;padding:.65rem .5rem;border-bottom:1px solid var(--line);vertical-align:middle}
+.table th{font-size:.9rem;color:var(--muted);font-weight:600}
+.scroll{overflow-x:auto}
+.pill{display:inline-block;font-size:.85rem;padding:.1rem .55rem;border-radius:99px;background:var(--chip)}
+.pill.bad{background:var(--badbg);color:var(--bad)}
+.pill.ok{background:var(--okbg);color:var(--ok)}
+.days{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0 1rem}
+.days button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:.45rem .7rem;font:inherit;cursor:pointer}
+.days button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--panel)}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem}
+.slot{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:.6rem;font:inherit;text-align:left;cursor:pointer}
+.slot strong{display:block}
+.slot span{font-size:.85rem;color:var(--muted)}
+.slot.booked{background:var(--chip)}
+.slot.booked span{color:var(--bad)}
+.slot:disabled{opacity:.45;cursor:not-allowed}
+.creds{margin-top:1.2rem;border:1px dashed var(--line);border-radius:6px;padding:.8rem 1rem;font-size:.95rem}
+.creds code{font-size:.95rem}
+.login{display:grid;gap:2rem;align-items:start;margin-top:1.5rem}
+@media(min-width:780px){.login{grid-template-columns:1fr 1fr}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1rem}
+.tile{text-align:left;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--safety);border-radius:8px;padding:1rem 1.1rem;font:inherit;color:var(--ink);cursor:pointer}
+.tile strong{display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.3rem;font-weight:600}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:.35rem 1.2rem;margin:0}dt{color:var(--muted)}dd{margin:0}
+.radio{display:flex;gap:1rem;flex-wrap:wrap}.radio label{font-weight:400;display:flex;gap:.4rem;align-items:center;margin:.2rem 0}
+.radio input,.check input{width:auto}
+.check{display:flex;gap:.5rem;align-items:flex-start;font-weight:400;margin-top:1rem}
+.crumbs{font-size:.9rem;color:var(--muted);margin-bottom:.5rem}
+.crumbs button{padding:0;color:inherit;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="stripe" aria-hidden="true"></div>
+<header id="hdr" hidden>
+ <div class="bar">
+  <div class="brand">Ironwood<small>Community Workshop</small></div>
+  <nav id="nav" aria-label="Main"></nav>
+  <span class="role" id="who"></span>
+  <button class="linkbtn" onclick="logout()">Log out</button>
+ </div>
+</header>
+<main id="app" aria-live="polite"></main>
+
+<script>
+/* ===================== SAMPLE DATA ===================== */
+const USERS={
+ "robert.byrne":{pw:"member123",role:"Member",name:"Robert Byrne",memberId:"M-1042"},
+ "marcus.ojeda":{pw:"shop456",role:"Shop Manager",name:"Marcus Ojeda"},
+ "kelsey.park":{pw:"monitor789",role:"Monitor",name:"Kelsey Park"}
+};
+const MEMBERS=[
+ {id:"M-1042",name:"Robert Byrne",tier:"Standard",age:38},
+ {id:"M-1107",name:"Jordan Fontaine",tier:"Standard",age:29},
+ {id:"M-1188",name:"Avery Lin",tier:"Youth",age:16},
+ {id:"M-1203",name:"Tia Nwosu",tier:"Business",age:41},
+ {id:"M-1251",name:"Miguel Reyes",tier:"Standard",age:33}
+];
+const MACHINES=[
+ {id:"L1",name:"Laser 1 (big)",bay:"Digital",out:false},
+ {id:"L2",name:"Laser 2 (small)",bay:"Digital",out:false},
+ {id:"CNC",name:"CNC router",bay:"Digital",out:false},
+ {id:"TS",name:"Table saw",bay:"Wood",out:false},
+ {id:"MIG",name:"MIG welder",bay:"Metal",out:false},
+ {id:"LATHE",name:"Metal lathe",bay:"Metal",out:true},
+ {id:"EMB",name:"Embroidery machine",bay:"Textile",out:false}
+];
+let CERTS=[
+ {member:"M-1042",machine:"CNC",date:"2026-03-12",method:"Class",by:"Priya Raghunathan"},
+ {member:"M-1042",machine:"L2",date:"2026-05-03",method:"One-on-one checkout",by:"Marcus Ojeda"},
+ {member:"M-1042",machine:"TS",date:"2025-11-20",method:"Class",by:"Dara Whitfield"},
+ {member:"M-1107",machine:"CNC",date:"2026-01-15",method:"Class",by:"Priya Raghunathan"},
+ {member:"M-1107",machine:"L1",date:"2026-02-08",method:"Class",by:"Priya Raghunathan"},
+ {member:"M-1188",machine:"EMB",date:"2026-06-21",method:"Class",by:"Priya Raghunathan"},
+ {member:"M-1203",machine:"MIG",date:"2025-09-30",method:"One-on-one checkout",by:"Marcus Ojeda"},
+ {member:"M-1203",machine:"LATHE",date:"2025-10-02",method:"One-on-one checkout",by:"Marcus Ojeda"}
+];
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const addDays=n=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+n);return d;};
+const TODAY=iso(addDays(0)),TOMORROW=iso(addDays(1));
+let RES=[
+ {machine:"CNC",date:TODAY,hour:18,member:"M-1107"},{machine:"CNC",date:TODAY,hour:19,member:"M-1107"},
+ {machine:"CNC",date:TOMORROW,hour:18,member:"M-1107"},{machine:"CNC",date:TOMORROW,hour:19,member:"M-1107"},
+ {machine:"L1",date:TODAY,hour:16,member:"M-1251"},{machine:"L1",date:TODAY,hour:17,member:"M-1251"},
+ {machine:"MIG",date:TODAY,hour:17,member:"M-1203"},{machine:"MIG",date:TODAY,hour:18,member:"M-1203"},
+ {machine:"L2",date:TOMORROW,hour:10,member:"M-1203"},
+ {machine:"TS",date:TOMORROW,hour:14,member:"M-1042"}
+];
+const HOURS=[9,10,11,12,13,14,15,16,17,18,19,20,21]; // open 9 AM – 10 PM
+
+/* ===================== HELPERS ===================== */
+const S={user:null,view:"login",msg:null,sel:{}};
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const mach=id=>MACHINES.find(m=>m.id===id);
+const mem=id=>MEMBERS.find(m=>m.id===id);
+const hr=h=>`${h%12||12} ${h<12?"AM":"PM"}`;
+const day=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});};
+const certOf=(m,mc)=>CERTS.find(c=>c.member===m&&c.machine===mc);
+const booking=(mc,d,h)=>RES.find(r=>r.machine===mc&&r.date===d&&r.hour===h);
+const msgHTML=()=>S.msg?`<div class="msg ${S.msg.type}" role="alert">${S.msg.text}${S.msg.sub?`<small>${S.msg.sub}</small>`:""}</div>`:"";
+function go(view,sel={},msg=null){S.view=view;S.sel={...S.sel,...sel};S.msg=msg;render();window.scrollTo(0,0);}
+
+/* ===================== LOGIN ===================== */
+function login(){
+ const u=$("#u").value.trim().toLowerCase(),p=$("#p").value;
+ if(!USERS[u]||USERS[u].pw!==p) return go("login",{}, {type:"bad",text:"Username or password is incorrect.",sub:"Check the test accounts listed on this page."});
+ S.user={id:u,...USERS[u]};go("home");
+}
+function logout(){S.user=null;S.sel={};go("login");}
+function vLogin(){
+ return `<div class="login">
+ <div>
+  <h1>Sign in to Ironwood</h1>
+  <p class="muted">Reserve machines and manage safety certifications for Ironwood Community Workshop.</p>
+  ${msgHTML()}
+  <form onsubmit="event.preventDefault();login()">
+   <label for="u">Username</label><input id="u" autocomplete="username" required>
+   <label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required>
+   <button class="btn" type="submit">Sign in</button>
+  </form>
+ </div>
+ <div class="panel">
+  <h3>Test accounts</h3>
+  <div class="scroll"><table class="table">
+   <tr><th>Role</th><th>Username</th><th>Password</th></tr>
+   <tr><td>Member</td><td><code>robert.byrne</code></td><td><code>member123</code></td></tr>
+   <tr><td>Shop Manager</td><td><code>marcus.ojeda</code></td><td><code>shop456</code></td></tr>
+   <tr><td>Monitor</td><td><code>kelsey.park</code></td><td><code>monitor789</code></td></tr>
+  </table></div>
+  <p class="muted" style="margin-bottom:0">Sprint 1 covers two requirements: reserve a machine (members) and manage machine certifications (staff).</p>
+ </div></div>`;
+}
+
+/* ===================== NAV ===================== */
+function navItems(){
+ const r=S.user.role;
+ if(r==="Member") return [["home","Home"],["machines","Reserve machine"]];
+ if(r==="Shop Manager") return [["home","Home"],["certSearch","Manage certifications"]];
+ return [["home","Home"],["certSearch","Check certifications"]];
+}
+function renderNav(){
+ const groups={machines:["machines","slots","confirm","done"],certSearch:["certSearch","certMember","certDone"]};
+ const active=Object.keys(groups).find(k=>groups[k].includes(S.view))||"home";
+ $("#nav").innerHTML=navItems().map(([k,t])=>`<button ${k===active?'aria-current="page"':""} onclick="go('${k}',{}, null)">${t}</button>`).join("");
+ $("#who").textContent=`${S.user.name} · ${S.user.role}`;
+}
+
+/* ===================== HOME ===================== */
+function vHome(){
+ const u=S.user;
+ if(u.role==="Member"){
+  const mine=RES.filter(r=>r.member===u.memberId).sort((a,b)=>(a.date+a.hour).localeCompare(b.date+b.hour));
+  const certs=CERTS.filter(c=>c.member===u.memberId);
+  return `<h1>Welcome back, ${u.name.split(" ")[0]}</h1>${msgHTML()}
+  <div class="tiles"><button class="tile" onclick="go('machines')"><strong>Reserve a machine</strong><span class="muted">See open times and book a slot</span></button></div>
+  <div class="panel"><h2>Your reservations</h2>${mine.length?`<div class="scroll"><table class="table"><tr><th>Machine</th><th>Date</th><th>Time</th></tr>${mine.map(r=>`<tr><td>${mach(r.machine).name}</td><td>${day(r.date)}</td><td>${hr(r.hour)} – ${hr(r.hour+1)}</td></tr>`).join("")}</table></div>`:`<p class="muted">No reservations yet. Reserve a machine to get started.</p>`}</div>
+  <div class="panel"><h2>Your certifications</h2><p>${certs.map(c=>`<span class="pill ok">${mach(c.machine).name}</span>`).join(" ")||'<span class="muted">None yet</span>'}</p></div>`;
+ }
+ const label=u.role==="Shop Manager"?"Manage certifications":"Check certifications";
+ const sub=u.role==="Shop Manager"?"Look up a member and record a new machine certification":"Look up whether a member is cleared on a machine";
+ return `<h1>Hi, ${u.name.split(" ")[0]}</h1><p class="muted">${u.role} dashboard</p>${msgHTML()}
+ <div class="tiles"><button class="tile" onclick="go('certSearch')"><strong>${label}</strong><span class="muted">${sub}</span></button></div>
+ <div class="panel"><h2>Machine status</h2><div class="scroll"><table class="table"><tr><th>Machine</th><th>Bay</th><th>Status</th></tr>
+ ${MACHINES.map(m=>`<tr><td>${m.name}</td><td>${m.bay}</td><td>${m.out?'<span class="pill bad">Out of service</span>':'<span class="pill ok">Available</span>'}</td></tr>`).join("")}</table></div></div>`;
+}
+
+/* ===================== REQUIREMENT 1: RESERVE A MACHINE (UC 003) ===================== */
+function vMachines(){
+ const me=S.user.memberId;
+ return `<div class="crumbs">Reserve a machine › Choose machine</div><h1>Choose a machine</h1>${msgHTML()}
+ <div class="panel scroll"><table class="table"><tr><th>Machine</th><th>Bay</th><th>Status</th><th>Your certification</th><th></th></tr>
+ ${MACHINES.map(m=>{const c=certOf(me,m.id);return `<tr><td><strong>${m.name}</strong></td><td>${m.bay}</td>
+  <td>${m.out?'<span class="pill bad">Out of service</span>':'<span class="pill ok">Available</span>'}</td>
+  <td>${c?'<span class="pill ok">Certified</span>':'<span class="pill">Not certified</span>'}</td>
+  <td>${m.out?'<span class="muted">Unavailable</span>':`<button class="btn secondary" style="margin:0" onclick="go('slots',{machine:'${m.id}',date:'${TODAY}'})">View times</button>`}</td></tr>`;}).join("")}
+ </table></div>`;
+}
+function vSlots(){
+ const m=mach(S.sel.machine),d=S.sel.date,now=new Date();
+ const days=[0,1,2,3,4,5,6].map(n=>iso(addDays(n)));
+ return `<div class="crumbs"><button class="linkbtn" onclick="go('machines')">Choose machine</button> › ${m.name}</div>
+ <h1>${m.name}</h1><p class="muted">${m.bay} bay · Open 9 AM – 10 PM · 1-hour slots</p>${msgHTML()}
+ <div class="panel"><h3>Pick a date</h3><div class="days" role="group" aria-label="Dates">${days.map(x=>`<button aria-pressed="${x===d}" onclick="go('slots',{date:'${x}'})">${day(x)}</button>`).join("")}</div>
+ <h3>Pick a time</h3><div class="slots">${HOURS.map(h=>{
+  const b=booking(m.id,d,h),past=d===TODAY&&h<=now.getHours();
+  const mine=b&&b.member===S.user.memberId;
+  if(past) return `<button class="slot" disabled><strong>${hr(h)}</strong><span>Past</span></button>`;
+  return `<button class="slot ${b?"booked":""}" onclick="pickSlot(${h})"><strong>${hr(h)}</strong><span>${mine?"Your booking":b?"Booked":"Open"}</span></button>`;}).join("")}
+ </div></div>`;
+}
+function pickSlot(h){
+ const m=S.sel.machine,d=S.sel.date,me=S.user.memberId;
+ const b=booking(m,d,h);
+ if(b){ // Alternate course 8a/8b
+  return go("slots",{}, {type:"bad",text:`${hr(h)} on ${day(d)} is already reserved.`,sub:"Choose another open time slot."});
+ }
+ if(!certOf(me,m)){ // Alternate course 6a/6b
+  return go("slots",{}, {type:"bad",text:`You are not certified to use the ${mach(m).name}.`,sub:"Certification is required before you can reserve this machine. Take the class or ask the shop manager for a one-on-one checkout."});
+ }
+ go("confirm",{hour:h});
+}
+function vConfirm(){
+ const m=mach(S.sel.machine);
+ return `<div class="crumbs"><button class="linkbtn" onclick="go('machines')">Choose machine</button> › <button class="linkbtn" onclick="go('slots')">${m.name}</button> › Confirm</div>
+ <h1>Confirm your reservation</h1>${msgHTML()}
+ <div class="panel"><dl><dt>Member</dt><dd>${S.user.name}</dd><dt>Machine</dt><dd>${m.name} (${m.bay} bay)</dd><dt>Date</dt><dd>${day(S.sel.date)}</dd><dt>Time</dt><dd>${hr(S.sel.hour)} – ${hr(S.sel.hour+1)}</dd><dt>Certification</dt><dd><span class="pill ok">Verified</span></dd></dl>
+ <button class="btn" onclick="confirmRes()">Confirm reservation</button><button class="btn secondary" onclick="go('slots')">Back</button></div>`;
+}
+function confirmRes(){
+ const {machine,date,hour}=S.sel;
+ if(booking(machine,date,hour)) return go("slots",{}, {type:"bad",text:"That slot was just taken by another member.",sub:"Choose another open time slot."}); // 8a re-check
+ RES.push({machine,date,hour,member:S.user.memberId}); // Step 9: record
+ go("done");
+}
+function vDone(){
+ const m=mach(S.sel.machine);
+ return `<h1>Reservation confirmed</h1>
+ <div class="msg ok" role="status">${m.name} is reserved for you on ${day(S.sel.date)}, ${hr(S.sel.hour)} – ${hr(S.sel.hour+1)}.<small>This slot is no longer available to other members.</small></div>
+ <button class="btn" onclick="go('home')">Back to home</button><button class="btn secondary" onclick="go('machines')">Reserve another</button>`;
+}
+
+/* ===================== REQUIREMENT 2: MANAGE CERTIFICATIONS (UC 004) ===================== */
+function vCertSearch(){
+ const q=(S.sel.q||"").toLowerCase();
+ const res=q?MEMBERS.filter(m=>m.name.toLowerCase().includes(q)||m.id.toLowerCase().includes(q)):MEMBERS;
+ const title=S.user.role==="Shop Manager"?"Manage certifications":"Check certifications";
+ return `<div class="crumbs">${title} › Find member</div><h1>${title}</h1>${msgHTML()}
+ <div class="panel"><form onsubmit="event.preventDefault();go('certSearch',{q:$('#q').value.trim()})">
+ <label for="q">Search member by name or ID</label><input id="q" value="${esc(S.sel.q||"")}" placeholder="e.g. Avery or M-1188">
+ <button class="btn" type="submit">Search</button>${S.sel.q?`<button class="btn secondary" type="button" onclick="go('certSearch',{q:''})">Clear</button>`:""}</form></div>
+ <div class="panel scroll">${res.length?`<table class="table"><tr><th>Member</th><th>ID</th><th>Tier</th><th>Certifications</th><th></th></tr>
+ ${res.map(m=>`<tr><td><strong>${m.name}</strong></td><td>${m.id}</td><td>${m.tier}</td><td>${CERTS.filter(c=>c.member===m.id).length}</td><td><button class="btn secondary" style="margin:0" onclick="go('certMember',{member:'${m.id}'})">Select</button></td></tr>`).join("")}</table>`
+ :`<p class="muted">No member matches “${esc(S.sel.q)}”. Check the spelling or search by member ID.</p>`}</div>`;
+}
+function vCertMember(){
+ const m=mem(S.sel.member),certs=CERTS.filter(c=>c.member===m.id),manager=S.user.role==="Shop Manager";
+ return `<div class="crumbs"><button class="linkbtn" onclick="go('certSearch')">Find member</button> › ${m.name}</div>
+ <h1>${m.name}</h1>${msgHTML()}
+ <div class="panel"><dl><dt>Member ID</dt><dd>${m.id}</dd><dt>Tier</dt><dd>${m.tier}</dd><dt>Age</dt><dd>${m.age}${m.age<18?' <span class="pill bad">Under 18</span>':""}</dd></dl></div>
+ <div class="panel"><h2>Current certifications</h2>${certs.length?`<div class="scroll"><table class="table"><tr><th>Machine</th><th>Bay</th><th>Date</th><th>Method</th><th>Approved by</th></tr>
+ ${certs.map(c=>`<tr><td>${mach(c.machine).name}</td><td>${mach(c.machine).bay}</td><td>${c.date}</td><td>${c.method}</td><td>${c.by}</td></tr>`).join("")}</table></div>`:`<p class="muted">No certifications on record.</p>`}</div>
+ ${manager?`<div class="panel"><h2>Record a new certification</h2>
+  <form onsubmit="event.preventDefault();recordCert()">
+  <label for="mc">Machine</label><select id="mc"><option value="">Select a machine</option>${MACHINES.map(x=>`<option value="${x.id}">${x.name} – ${x.bay} bay</option>`).join("")}</select>
+  <fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;margin:.9rem 0 .3rem">How was it earned?</legend>
+   <div class="radio"><label><input type="radio" name="method" value="Class"> Completed class</label><label><input type="radio" name="method" value="One-on-one checkout"> One-on-one checkout</label></div></fieldset>
+  <label class="check"><input type="checkbox" id="passed"> I confirm this member passed the required class or checkout.</label>
+  <button class="btn" type="submit">Record certification</button></form></div>`
+ :`<p class="muted">Monitors can view certifications. Only the shop manager can record new ones.</p>`}`;
+}
+function recordCert(){
+ const m=mem(S.sel.member),mc=$("#mc").value,methodEl=document.querySelector('input[name="method"]:checked'),passed=$("#passed").checked;
+ if(!mc||!methodEl||!passed){ // Alternate course 8c/8d
+  const miss=[!mc&&"machine",!methodEl&&"how it was earned",!passed&&"pass confirmation"].filter(Boolean).join(", ");
+  return go("certMember",{}, {type:"bad",text:"Some required information is missing.",sub:`Complete: ${miss}.`});
+ }
+ const machine=mach(mc);
+ if(m.age<18&&machine.bay==="Metal"){ // Alternate course 6a/6b
+  return go("certMember",{}, {type:"bad",text:`Cannot certify ${m.name} on the ${machine.name}.`,sub:"Members under 18 cannot be certified for machines in the metal bay."});
+ }
+ const existing=certOf(m.id,mc);
+ if(existing){ // Alternate course 8a/8b
+  return go("certMember",{}, {type:"bad",text:`${m.name} is already certified on the ${machine.name}.`,sub:`Existing record: ${existing.date}, ${existing.method}, approved by ${existing.by}. No duplicate was created.`});
+ }
+ const rec={member:m.id,machine:mc,date:TODAY,method:methodEl.value,by:S.user.name};
+ CERTS.push(rec); // Step 8: record machine, member, date, approving staff
+ S.sel.last=rec;go("certDone");
+}
+function vCertDone(){
+ const r=S.sel.last,m=mem(r.member);
+ return `<h1>Certification recorded</h1>
+ <div class="msg ok" role="status">${m.name} is now certified on the ${mach(r.machine).name}.<small>Recorded ${r.date} · ${r.method} · approved by ${r.by}</small></div>
+ <button class="btn" onclick="go('certMember',{member:'${m.id}'})">View member</button><button class="btn secondary" onclick="go('certSearch',{q:''})">Find another member</button>`;
+}
+
+/* ===================== RENDER ===================== */
+function render(){
+ if(!S.user){$("#hdr").hidden=true;$("#app").innerHTML=vLogin();return;}
+ $("#hdr").hidden=false;renderNav();
+ const V={home:vHome,machines:vMachines,slots:vSlots,confirm:vConfirm,done:vDone,certSearch:vCertSearch,certMember:vCertMember,certDone:vCertDone};
+ $("#app").innerHTML=(V[S.view]||vHome)();
+}
+render();
+</script>
+</body>
+</html>
