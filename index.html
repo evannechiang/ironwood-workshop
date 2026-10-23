@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ironwood Community Workshop – Sprint 2 Prototype</title>
+<title>Ironwood Community Workshop – Prototype</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f6f6f3;--panel:#ffffff;--ink:#1f2328;--muted:#5f6670;--line:#d8dad6;--safety:#f2b705;--bad:#b42318;--badbg:#fdecea;--ok:#1e7a46;--okbg:#e7f5ec;--chip:#eef0ec;
@@ -137,6 +137,19 @@ let CLASSES=[
  {id:"C4",name:"Embroidery Basics",instructor:"Priya Raghunathan",bay:"Textile",date:iso(addDays(6)),time:"10:00",cert:"EMB",cap:6,others:6}
 ];
 let ENROLL=[{cls:"C1",member:"M-1042"}];
+// Guest waivers and visits. A waiver is valid for one year from the date it was signed.
+let VISITORS=[
+ {id:"V-201",name:"Sam Patel",type:"Guest",phone:"317-555-0142",waiver:iso(addDays(-40)),dayPassPaid:null},
+ {id:"V-202",name:"Dana Kim",type:"Day-Pass User",phone:"317-555-0177",waiver:iso(addDays(-10)),dayPassPaid:true},
+ {id:"V-203",name:"Leo Martinez",type:"Day-Pass User",phone:"317-555-0190",waiver:iso(addDays(-5)),dayPassPaid:false},
+ {id:"V-204",name:"Chris Owens",type:"Guest",phone:"317-555-0115",waiver:iso(addDays(-400)),dayPassPaid:null},
+ {id:"V-205",name:"Jamie Fox",type:"Guest",phone:"317-555-0108",waiver:null,dayPassPaid:null},
+ {id:"V-206",name:"Morgan Lee",type:"Day-Pass User",phone:"317-555-0163",waiver:iso(addDays(-2)),dayPassPaid:true}
+];
+let VISITS=[
+ {visitor:"V-206",date:TODAY,time:"10:15 AM",type:"Day-Pass User",by:"Kelsey Park"},
+ {visitor:"V-201",date:iso(addDays(-1)),time:"6:40 PM",type:"Guest",by:"Kelsey Park"}
+];
 
 /* ===================== HELPERS ===================== */
 const S={user:null,view:"login",msg:null,sel:{}};
@@ -151,6 +164,12 @@ const taken=c=>c.others+ENROLL.filter(e=>e.cls===c.id).length;
 const left=c=>c.cap-taken(c);
 const t12=t=>{const [h,m]=t.split(":").map(Number);return `${h%12||12}:${String(m).padStart(2,"0")} ${h<12?"AM":"PM"}`;};
 const byDate=(a,b)=>(a.date+a.time).localeCompare(b.date+b.time);
+const vis=id=>VISITORS.find(v=>v.id===id);
+const waiverExp=v=>{if(!v.waiver)return null;const [y,m,d]=v.waiver.split("-").map(Number);return iso(new Date(y+1,m-1,d));};
+const waiverValid=v=>!!v.waiver&&waiverExp(v)>TODAY;
+const dayY=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});};
+const waiverPill=v=>!v.waiver?'<span class="pill bad">No waiver on file</span>':waiverValid(v)?`<span class="pill ok">Valid until ${dayY(waiverExp(v))}</span>`:`<span class="pill bad">Expired ${dayY(waiverExp(v))}</span>`;
+const nowTime=()=>new Date().toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
 const certOf=(m,mc)=>CERTS.find(c=>c.member===m&&c.machine===mc);
 const booking=(mc,d,h)=>RES.find(r=>r.machine===mc&&r.date===d&&r.hour===h);
 const msgHTML=()=>S.msg?`<div class="msg ${S.msg.type}" role="alert">${S.msg.text}${S.msg.sub?`<small>${S.msg.sub}</small>`:""}</div>`:"";
@@ -174,6 +193,8 @@ function vLogin(){
    <label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required>
    <button class="btn" type="submit">Sign in</button>
   </form>
+  <div class="panel" style="margin-top:1.5rem"><h3>Visiting as a guest?</h3><p class="muted" style="margin:0">Guests do not need an account. Complete the liability waiver before entering the shop floor.</p>
+  <button class="btn secondary" onclick="go('waiverForm',{wd:null})">Complete Liability Waiver</button></div>
  </div>
  <div class="panel">
   <h3>Test accounts</h3>
@@ -185,7 +206,7 @@ function vLogin(){
    <tr><td>Class Coordinator</td><td><code>priya.raghunathan</code></td><td><code>class321</code></td></tr>
    <tr><td>Member (under 18)</td><td><code>avery.lin</code></td><td><code>youth555</code></td></tr>
   </table></div>
-  <p class="muted" style="margin-bottom:0">Sprint 1: reserve a machine and manage machine certifications. Sprint 2 adds: register for a class (members) and create and manage classes (class coordinator).</p>
+  <p class="muted" style="margin-bottom:0">Sprint 1: reserve a machine and manage machine certifications. Sprint 2 adds: register for a class (members), create and manage classes (class coordinator), complete a guest liability waiver (guests, no login), and record a guest or day-pass visit (monitor).</p>
  </div></div>`;
 }
 
@@ -194,11 +215,11 @@ function navItems(){
  const r=S.user.role;
  if(r==="Member") return [["home","Home"],["machines","Reserve machine"],["classes","Classes"]];
  if(r==="Class Coordinator") return [["home","Home"],["manageClasses","Manage Classes"]];
- if(r==="Shop Manager") return [["home","Home"],["certSearch","Manage certifications"]];
- return [["home","Home"],["certSearch","Check certifications"]];
+ if(r==="Shop Manager") return [["home","Home"],["certSearch","Manage certifications"],["visitRecords","Visit Records"]];
+ return [["home","Home"],["certSearch","Check certifications"],["recordVisit","Record Visit"],["waiverStatus","Waiver Status"],["visitRecords","Visit Records"]];
 }
 function renderNav(){
- const groups={machines:["machines","slots","confirm","done"],certSearch:["certSearch","certMember","certDone"],classes:["classes","classDetail","classDone"],manageClasses:["manageClasses","classForm","classSaved"]};
+ const groups={machines:["machines","slots","confirm","done"],certSearch:["certSearch","certMember","certDone"],classes:["classes","classDetail","classDone"],manageClasses:["manageClasses","classForm","classSaved"],recordVisit:["recordVisit","visitorReview","visitDone"],waiverStatus:["waiverStatus"],visitRecords:["visitRecords"]};
  const active=Object.keys(groups).find(k=>groups[k].includes(S.view))||"home";
  $("#nav").innerHTML=navItems().map(([k,t])=>`<button ${k===active?'aria-current="page"':""} onclick="go('${k}',{}, null)">${t}</button>`).join("");
  $("#who").textContent=`${S.user.name} · ${S.user.role}`;
@@ -226,7 +247,10 @@ function vHome(){
  const label=u.role==="Shop Manager"?"Manage certifications":"Check certifications";
  const sub=u.role==="Shop Manager"?"Look up a member and record a new machine certification":"Look up whether a member is cleared on a machine";
  return `<h1>Hi, ${u.name.split(" ")[0]}</h1><p class="muted">${u.role} dashboard</p>${msgHTML()}
- <div class="tiles"><button class="tile" onclick="go('certSearch')"><strong>${label}</strong><span class="muted">${sub}</span></button></div>
+ <div class="tiles"><button class="tile" onclick="go('certSearch')"><strong>${label}</strong><span class="muted">${sub}</span></button>
+ ${u.role==="Monitor"?`<button class="tile" onclick="go('recordVisit',{vq:''})"><strong>Record Visit</strong><span class="muted">Check in a guest or day-pass user</span></button>
+ <button class="tile" onclick="go('waiverStatus',{wq:''})"><strong>Waiver Status</strong><span class="muted">Verify a visitor's liability waiver</span></button>`:""}
+ <button class="tile" onclick="go('visitRecords')"><strong>Visit Records</strong><span class="muted">View recorded visits to verify attendance</span></button></div>
  <div class="panel"><h2>Machine status</h2><div class="scroll"><table class="table"><tr><th>Machine</th><th>Bay</th><th>Status</th></tr>
  ${MACHINES.map(m=>`<tr><td>${m.name}</td><td>${m.bay}</td><td>${m.out?'<span class="pill bad">Out of service</span>':'<span class="pill ok">Available</span>'}</td></tr>`).join("")}</table></div></div>`;
 }
@@ -432,11 +456,147 @@ function vClassSaved(){ // Step 9
  <button class="btn" onclick="go('manageClasses')">Back to Manage Classes</button><button class="btn secondary" onclick="go('classForm',{edit:null,draft:null})">Create another class</button>`;
 }
 
+/* ===================== REQUIREMENT: COMPLETE A GUEST LIABILITY WAIVER (UC 007) ===================== */
+const RULES=["Guests may watch but may not operate any machine.","Wear closed-toe shoes and safety glasses on the shop floor at all times.","Stay behind marked lines around running machinery.","Follow every instruction from the monitor on duty.","Report any injury or unsafe condition to the monitor immediately."];
+function guestBar(){return `<div class="crumbs"><button class="linkbtn" onclick="logout()">Back to sign in</button> › Visitor intake</div>`;}
+function vWaiverForm(){ // Step 2: waiver form
+ const d=S.sel.wd||{name:"",dob:"",phone:"",email:"",emName:"",emPhone:""};
+ return `${guestBar()}<h1>Complete Liability Waiver</h1><p class="muted">Every person on the shop floor needs a signed waiver on file. It is valid for one year.</p>${msgHTML()}
+ <div class="panel"><h2>Your information</h2><form onsubmit="event.preventDefault();waiverInfo()">
+ <label for="wn">Full name</label><input id="wn" value="${esc(d.name)}" autocomplete="name">
+ <label for="wb">Date of birth</label><input id="wb" type="date" value="${d.dob}">
+ <label for="wp">Phone</label><input id="wp" type="tel" value="${esc(d.phone)}" autocomplete="tel">
+ <label for="we">Email</label><input id="we" type="email" value="${esc(d.email)}" autocomplete="email">
+ <label for="wen">Emergency contact name</label><input id="wen" value="${esc(d.emName)}">
+ <label for="wep">Emergency contact phone</label><input id="wep" type="tel" value="${esc(d.emPhone)}">
+ <div><button class="btn" type="submit">Continue</button></div></form></div>`;
+}
+function waiverInfo(){ // Step 3 -> Step 4
+ const d={name:$("#wn").value.trim(),dob:$("#wb").value,phone:$("#wp").value.trim(),email:$("#we").value.trim(),emName:$("#wen").value.trim(),emPhone:$("#wep").value.trim()};
+ const labels={name:"full name",dob:"date of birth",phone:"phone",emName:"emergency contact name",emPhone:"emergency contact phone"};
+ const missing=Object.keys(labels).filter(k=>!d[k]).map(k=>labels[k]);
+ if(missing.length) // Alternate course 6a/6b
+  return go("waiverForm",{wd:d}, {type:"bad",text:"Some required information is missing.",sub:`Complete: ${missing.join(", ")}.`});
+ go("waiverTerms",{wd:d,wack:null});
+}
+function vWaiverTerms(){ // Step 4: safety rules, liability terms, acknowledgments
+ const a=S.sel.wack||{};
+ return `${guestBar()}<h1>Review the waiver</h1>${msgHTML()}
+ <div class="panel"><h2>Workshop safety rules</h2><ul>${RULES.map(r=>`<li>${r}</li>`).join("")}</ul>
+ <h2>Liability terms</h2><p>I understand that a woodworking and metalworking shop involves risk of injury. I voluntarily accept these risks and release Ironwood Community Workshop, its staff, and its volunteers from liability for injury that occurs during my visit, except in cases of gross negligence. This waiver is valid for one year from the date I sign it.</p>
+ <form onsubmit="event.preventDefault();waiverReview()">
+ <label class="check"><input type="checkbox" id="ack1" ${a.rules?"checked":""}> I have read and will follow the workshop safety rules.</label>
+ <label class="check"><input type="checkbox" id="ack2" ${a.terms?"checked":""}> I have read and accept the liability terms.</label>
+ <label class="check"><input type="checkbox" id="ack3" ${a.watch?"checked":""}> I understand that guests may watch but may not operate any machine.</label>
+ <label for="sig">Electronic signature (type your full name)</label><input id="sig" value="${esc(a.sig||"")}">
+ <div><button class="btn" type="submit">Review and Continue</button><button class="btn secondary" type="button" onclick="go('waiverForm')">Back</button></div></form></div>`;
+}
+function waiverReview(){ // Step 5 -> Step 6: validate, then show submission confirmation screen
+ const a={rules:$("#ack1").checked,terms:$("#ack2").checked,watch:$("#ack3").checked,sig:$("#sig").value.trim()};
+ const missing=[!a.rules&&"safety rules acknowledgment",!a.terms&&"liability terms acknowledgment",!a.watch&&"guest rules acknowledgment",!a.sig&&"electronic signature"].filter(Boolean);
+ if(missing.length) // Alternate course 6a/6b
+  return go("waiverTerms",{wack:a}, {type:"bad",text:"Some required information is missing.",sub:`Complete: ${missing.join(", ")}.`});
+ if(a.sig.toLowerCase()!==S.sel.wd.name.toLowerCase())
+  return go("waiverTerms",{wack:a}, {type:"bad",text:"The signature does not match the name you entered.",sub:`Type your full name exactly as entered: ${esc(S.sel.wd.name)}.`});
+ go("waiverConfirm",{wack:a});
+}
+function vWaiverConfirm(){ // Step 6: submission confirmation screen
+ const d=S.sel.wd,a=S.sel.wack;
+ return `${guestBar()}<h1>Confirm and submit</h1>${msgHTML()}
+ <div class="panel"><dl><dt>Name</dt><dd>${esc(d.name)}</dd><dt>Date of birth</dt><dd>${day(d.dob)}</dd><dt>Phone</dt><dd>${esc(d.phone)}</dd>${d.email?`<dt>Email</dt><dd>${esc(d.email)}</dd>`:""}<dt>Emergency contact</dt><dd>${esc(d.emName)} · ${esc(d.emPhone)}</dd><dt>Signed as</dt><dd>${esc(a.sig)}</dd><dt>Acknowledgments</dt><dd><span class="pill ok">All 3 completed</span></dd></dl>
+ <label class="check muted"><input type="checkbox" id="simErr"> Prototype test only: simulate a save error</label>
+ <div><button class="btn" onclick="submitWaiver()">Submit Waiver</button><button class="btn secondary" onclick="go('waiverTerms')">Back</button></div></div>`;
+}
+function submitWaiver(){ // Step 7 -> Step 8
+ if($("#simErr").checked) // Alternate course 8a/8b
+  return go("waiverConfirm",{}, {type:"bad",text:"Your waiver could not be saved because of a technical error.",sub:"Your waiver has NOT been marked as completed. Please try again or ask the monitor for help."});
+ const d=S.sel.wd;
+ let v=VISITORS.find(x=>x.name.toLowerCase()===d.name.toLowerCase()&&x.phone===d.phone);
+ if(v){v.waiver=TODAY;}else{v={id:"V-"+(201+VISITORS.length),name:d.name,type:"Guest",phone:d.phone,waiver:TODAY,dayPassPaid:null};VISITORS.push(v);}
+ go("waiverDone",{wv:v.id,wd:null,wack:null});
+}
+function vWaiverDone(){ // Step 9
+ const v=vis(S.sel.wv);
+ return `${guestBar()}<h1>Waiver submitted</h1>
+ <div class="msg ok" role="status">Thank you, ${esc(v.name)}. Your liability waiver has been successfully submitted.<small>Waiver ID ${v.id} · valid until ${dayY(waiverExp(v))}. Let the monitor on duty know you have completed it.</small></div>
+ <button class="btn" onclick="logout()">Done</button>`;
+}
+function vWaiverStatus(){ // Steps 10-11 (Monitor)
+ const q=(S.sel.wq||"").toLowerCase();
+ const res=q?VISITORS.filter(v=>v.name.toLowerCase().includes(q)||v.id.toLowerCase().includes(q)||v.phone.includes(q)):[];
+ return `<div class="crumbs">Waiver Status › Search</div><h1>Waiver Status</h1>${msgHTML()}
+ <div class="panel"><form onsubmit="event.preventDefault();go('waiverStatus',{wq:$('#wq').value.trim()})">
+ <label for="wq">Search visitor by name, phone, or waiver ID</label><input id="wq" value="${esc(S.sel.wq||"")}" placeholder="e.g. Sam or V-201">
+ <button class="btn" type="submit">Search</button></form></div>
+ ${q?`<div class="panel scroll">${res.length?`<table class="table"><tr><th>Visitor</th><th>Type</th><th>Waiver status</th><th>Entry</th></tr>
+ ${res.map(v=>`<tr><td><strong>${esc(v.name)}</strong><br><span class="muted">${v.id}</span></td><td>${v.type}</td><td>${waiverPill(v)}</td>
+  <td>${waiverValid(v)?'<span class="pill ok">Valid waiver on file</span>':'<span class="pill bad">Do not approve entry</span>'}</td></tr>`).join("")}</table>`
+ :`<div class="msg bad" role="alert">No valid waiver is on file for “${esc(S.sel.wq)}”.<small>Do not approve workshop entry. Ask the visitor to complete the liability waiver first.</small></div>`}</div>`:""}`;
+}
+
+/* ===================== REQUIREMENT: RECORD A GUEST OR DAY-PASS VISIT (UC 008) ===================== */
+const activeVisit=v=>VISITS.find(x=>x.visitor===v.id&&x.date===TODAY);
+function vRecordVisit(){ // Step 2: visitor check-in page, Steps 3-4 search
+ const q=(S.sel.vq||"").toLowerCase();
+ const res=q?VISITORS.filter(v=>v.name.toLowerCase().includes(q)||v.id.toLowerCase().includes(q)||v.phone.includes(q)):VISITORS;
+ return `<div class="crumbs">Record Visit › Visitor check-in</div><h1>Visitor check-in</h1>${msgHTML()}
+ <div class="panel"><form onsubmit="event.preventDefault();go('recordVisit',{vq:$('#vq').value.trim()})">
+ <label for="vq">Search guest or day-pass user by name, phone, or ID</label><input id="vq" value="${esc(S.sel.vq||"")}" placeholder="e.g. Dana or V-202">
+ <button class="btn" type="submit">Search</button>${S.sel.vq?`<button class="btn secondary" type="button" onclick="go('recordVisit',{vq:''})">Clear</button>`:""}</form></div>
+ <div class="panel scroll">${res.length?`<table class="table"><tr><th>Visitor</th><th>Type</th><th>Phone</th><th></th></tr>
+ ${res.map(v=>`<tr><td><strong>${esc(v.name)}</strong><br><span class="muted">${v.id}</span></td><td>${v.type}</td><td>${esc(v.phone)}</td>
+  <td><button class="btn secondary" style="margin:0" onclick="go('visitorReview',{visitor:'${v.id}',vok:false})">Select</button></td></tr>`).join("")}</table>`
+ :`<p class="muted">No visitor matches “${esc(S.sel.vq)}”. The visitor may need to complete a liability waiver first.</p>`}</div>`;
+}
+function vVisitorReview(){ // Step 6: waiver status and day-pass payment requirements; Step 8 enables Check In
+ const v=vis(S.sel.visitor),dp=v.type==="Day-Pass User";
+ return `<div class="crumbs"><button class="linkbtn" onclick="go('recordVisit')">Visitor check-in</button> › ${esc(v.name)}</div>
+ <h1>${esc(v.name)}</h1>${msgHTML()}
+ <div class="panel"><h2>Intake information</h2><dl><dt>Visitor ID</dt><dd>${v.id}</dd><dt>Visitor type</dt><dd>${v.type}</dd><dt>Phone</dt><dd>${esc(v.phone)}</dd>
+ <dt>Liability waiver</dt><dd>${waiverPill(v)}</dd>
+ <dt>Day-pass payment</dt><dd>${dp?(v.dayPassPaid?'<span class="pill ok">Paid</span>':'<span class="pill bad">Not paid</span>'):'<span class="muted">Not required for guests</span>'}</dd></dl>
+ ${S.sel.vok?`<div class="msg ok" role="status">All requirements are satisfied.<small>Check-in is now enabled.</small></div>
+  <label class="check muted"><input type="checkbox" id="simErr2"> Prototype test only: simulate a network or saving error</label>
+  <div><button class="btn" onclick="checkIn()">Check In</button><button class="btn secondary" onclick="go('recordVisit')">Back</button></div>`
+ :`<div><button class="btn" onclick="confirmReqs()">Confirm Requirements</button><button class="btn secondary" onclick="go('recordVisit')">Back</button></div>`}</div>`;
+}
+function confirmReqs(){ // Step 7 -> Step 8
+ const v=vis(S.sel.visitor);
+ if(!waiverValid(v)) // Alternate course 6a/6b
+  return go("visitorReview",{vok:false}, {type:"bad",text:`${v.name} does not have a valid liability waiver.`,sub:"Check-in cannot be completed until the visitor completes the liability waiver."});
+ if(v.type==="Day-Pass User"&&!v.dayPassPaid) // Alternate course 8a/8b
+  return go("visitorReview",{vok:false}, {type:"bad",text:"Day-pass payment has not been completed.",sub:"Payment must be verified before check-in."});
+ go("visitorReview",{vok:true});
+}
+function checkIn(){ // Step 9 -> Step 10
+ const v=vis(S.sel.visitor),existing=activeVisit(v);
+ if(existing) // Alternate course 10a/10b
+  return go("visitorReview",{vok:true}, {type:"bad",text:`${v.name} is already checked in today.`,sub:`Existing check-in: ${day(existing.date)} at ${existing.time}, recorded by ${existing.by}. No duplicate visit was created.`});
+ if($("#simErr2").checked) // Alternate course 10c/10d
+  return go("visitorReview",{vok:true}, {type:"bad",text:"The check-in was not saved because of a network or saving error.",sub:"Nothing was recorded. Select Check In again to retry."});
+ const rec={visitor:v.id,date:TODAY,time:nowTime(),type:v.type,by:S.user.name};
+ VISITS.push(rec);S.sel.lastVisit=rec;go("visitDone");
+}
+function vVisitDone(){ // Step 11
+ const r=S.sel.lastVisit,v=vis(r.visitor);
+ return `<h1>Check-in recorded</h1>
+ <div class="msg ok" role="status">${esc(v.name)} is checked in.<small>${r.type} · ${day(r.date)} at ${r.time} · recorded by ${esc(r.by)}</small></div>
+ <button class="btn" onclick="go('recordVisit',{vq:''})">Check in another visitor</button><button class="btn secondary" onclick="go('visitRecords')">View Visit Records</button>`;
+}
+function vVisitRecords(){ // Steps 12-13
+ const list=[...VISITS].sort((a,b)=>b.date.localeCompare(a.date));
+ const today=VISITS.filter(x=>x.date===TODAY).length;
+ return `<div class="crumbs">Visit Records</div><h1>Visit Records</h1>${msgHTML()}
+ <p class="muted">${today} visitor check-in${today===1?"":"s"} today · ${VISITS.length} total recorded</p>
+ <div class="panel scroll"><table class="table"><tr><th>Visitor</th><th>Type</th><th>Date</th><th>Time</th><th>Recorded by</th></tr>
+ ${list.map(r=>`<tr><td>${esc(vis(r.visitor).name)}</td><td>${r.type}</td><td>${day(r.date)}</td><td>${r.time}</td><td>${esc(r.by)}</td></tr>`).join("")}</table></div>`;
+}
+
 /* ===================== RENDER ===================== */
 function render(){
- if(!S.user){$("#hdr").hidden=true;$("#app").innerHTML=vLogin();return;}
+ if(!S.user){$("#hdr").hidden=true;const G={waiverForm:vWaiverForm,waiverTerms:vWaiverTerms,waiverConfirm:vWaiverConfirm,waiverDone:vWaiverDone};$("#app").innerHTML=(G[S.view]||vLogin)();return;}
  $("#hdr").hidden=false;renderNav();
- const V={home:vHome,machines:vMachines,slots:vSlots,confirm:vConfirm,done:vDone,certSearch:vCertSearch,certMember:vCertMember,certDone:vCertDone,classes:vClasses,classDetail:vClassDetail,classDone:vClassDone,manageClasses:vManageClasses,classForm:vClassForm,classSaved:vClassSaved};
+ const V={home:vHome,machines:vMachines,slots:vSlots,confirm:vConfirm,done:vDone,certSearch:vCertSearch,certMember:vCertMember,certDone:vCertDone,classes:vClasses,classDetail:vClassDetail,classDone:vClassDone,manageClasses:vManageClasses,classForm:vClassForm,classSaved:vClassSaved,waiverStatus:vWaiverStatus,recordVisit:vRecordVisit,visitorReview:vVisitorReview,visitDone:vVisitDone,visitRecords:vVisitRecords};
  $("#app").innerHTML=(V[S.view]||vHome)();
 }
 render();

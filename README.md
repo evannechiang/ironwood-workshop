@@ -24,6 +24,21 @@ The prototype runs entirely in the browser using sample data. Nothing is saved: 
 | 1 | Manage machine certifications | UC 002 | Shop Manager (records), Monitor (views) |
 | 2 | Register for class | UC 004 | Member |
 | 2 | Create and manage classes | UC 005 | Class Coordinator |
+| 2 | Complete a guest liability waiver | UC 007 | Guest (no login: "Complete Liability Waiver" on the sign-in page); Monitor checks "Waiver Status" |
+| 2 | Record a guest or day-pass visit | UC 008 | Monitor ("Record Visit"); Monitor and Shop Manager view "Visit Records" |
+
+## Sample visitors (for UC 007 and UC 008)
+
+| Visitor | Type | What it shows |
+|---|---|---|
+| Dana Kim | Day-Pass User | Everything complete, check-in works |
+| Sam Patel | Guest | Valid waiver, check-in works |
+| Jamie Fox | Guest | No waiver on file, check-in blocked |
+| Chris Owens | Guest | Expired waiver, check-in blocked |
+| Leo Martinez | Day-Pass User | Day-pass not paid, check-in blocked |
+| Morgan Lee | Day-Pass User | Already checked in today, no duplicate |
+
+The waiver and check-in screens have a "Prototype test only" checkbox to simulate a save error.
 
 ## Files
 
