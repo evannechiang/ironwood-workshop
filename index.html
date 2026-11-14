@@ -88,7 +88,8 @@ const USERS={
  "marcus.ojeda":{pw:"shop456",role:"Shop Manager",name:"Marcus Ojeda"},
  "kelsey.park":{pw:"monitor789",role:"Monitor",name:"Kelsey Park"},
  "priya.raghunathan":{pw:"class321",role:"Class Coordinator",name:"Priya Raghunathan"},
- "avery.lin":{pw:"youth555",role:"Member",name:"Avery Lin",memberId:"M-1188"}
+ "avery.lin":{pw:"youth555",role:"Member",name:"Avery Lin",memberId:"M-1188"},
+ "alex.morgan":{pw:"staff246",role:"Staff Member",name:"Alex Morgan"}
 };
 const MEMBERS=[
  {id:"M-1042",name:"Robert Byrne",tier:"Standard",age:38},
@@ -145,6 +146,20 @@ let VISITORS=[
  {id:"V-204",name:"Chris Owens",type:"Guest",phone:"317-555-0115",waiver:iso(addDays(-400)),dayPassPaid:null},
  {id:"V-205",name:"Jamie Fox",type:"Guest",phone:"317-555-0108",waiver:null,dayPassPaid:null},
  {id:"V-206",name:"Morgan Lee",type:"Day-Pass User",phone:"317-555-0163",waiver:iso(addDays(-2)),dayPassPaid:true}
+];
+// Membership payment accounts (UC 009). lastPaid null = payment information incomplete.
+const ACCOUNTS={
+ "M-1042":{status:"Current",lastPaid:iso(addDays(-12)),due:0},
+ "M-1107":{status:"Overdue",lastPaid:iso(addDays(-75)),due:90},
+ "M-1188":{status:"Current",lastPaid:iso(addDays(-20)),due:0},
+ "M-1203":{status:"Overdue",lastPaid:iso(addDays(-48)),due:75},
+ "M-1251":{status:"Incomplete",lastPaid:null,due:null}
+};
+// Machine maintenance history (UC 010)
+let MAINT=[
+ {machine:"TS",date:iso(addDays(-30)),time:"09:30",type:"Maintenance",service:"Blade sharpening and fence alignment",by:"Marcus Ojeda",hours:412,notes:"Blade replaced; fence was 1/32 in. out of square."},
+ {machine:"L1",date:iso(addDays(-14)),time:"14:00",type:"Maintenance",service:"Optics cleaning",by:"Marcus Ojeda",hours:1288,notes:"Lens and mirrors cleaned."},
+ {machine:"LATHE",date:iso(addDays(-3)),time:"11:15",type:"Repair",service:"Spindle bearing inspection",by:"Northside Machine Service",hours:2034,notes:"Bearing worn. Replacement part ordered; lathe stays out of service."}
 ];
 let VISITS=[
  {visitor:"V-206",date:TODAY,time:"10:15 AM",type:"Day-Pass User",by:"Kelsey Park"},
@@ -205,8 +220,9 @@ function vLogin(){
    <tr><td>Monitor</td><td><code>kelsey.park</code></td><td><code>monitor789</code></td></tr>
    <tr><td>Class Coordinator</td><td><code>priya.raghunathan</code></td><td><code>class321</code></td></tr>
    <tr><td>Member (under 18)</td><td><code>avery.lin</code></td><td><code>youth555</code></td></tr>
+   <tr><td>Staff Member</td><td><code>alex.morgan</code></td><td><code>staff246</code></td></tr>
   </table></div>
-  <p class="muted" style="margin-bottom:0">Sprint 1: reserve a machine and manage machine certifications. Sprint 2 adds: register for a class (members), create and manage classes (class coordinator), complete a guest liability waiver (guests, no login), and record a guest or day-pass visit (monitor).</p>
+  <p class="muted" style="margin-bottom:0">Sprint 1: reserve a machine and manage machine certifications. Sprint 2 adds: register for a class (members), create and manage classes (class coordinator), complete a guest liability waiver (guests, no login), and record a guest or day-pass visit (monitor). Sprint 3 adds: view overdue member accounts (staff member) and record machine maintenance and repairs (shop manager).</p>
  </div></div>`;
 }
 
@@ -215,11 +231,12 @@ function navItems(){
  const r=S.user.role;
  if(r==="Member") return [["home","Home"],["machines","Reserve machine"],["classes","Classes"]];
  if(r==="Class Coordinator") return [["home","Home"],["manageClasses","Manage Classes"]];
- if(r==="Shop Manager") return [["home","Home"],["certSearch","Manage certifications"],["visitRecords","Visit Records"]];
+ if(r==="Staff Member") return [["home","Home"],["accounts","Member Accounts"]];
+ if(r==="Shop Manager") return [["home","Home"],["certSearch","Manage certifications"],["maint","Manage Maintenance"],["visitRecords","Visit Records"]];
  return [["home","Home"],["certSearch","Check certifications"],["recordVisit","Record Visit"],["waiverStatus","Waiver Status"],["visitRecords","Visit Records"]];
 }
 function renderNav(){
- const groups={machines:["machines","slots","confirm","done"],certSearch:["certSearch","certMember","certDone"],classes:["classes","classDetail","classDone"],manageClasses:["manageClasses","classForm","classSaved"],recordVisit:["recordVisit","visitorReview","visitDone"],waiverStatus:["waiverStatus"],visitRecords:["visitRecords"]};
+ const groups={machines:["machines","slots","confirm","done"],certSearch:["certSearch","certMember","certDone"],classes:["classes","classDetail","classDone"],manageClasses:["manageClasses","classForm","classSaved"],recordVisit:["recordVisit","visitorReview","visitDone"],waiverStatus:["waiverStatus"],visitRecords:["visitRecords"],accounts:["accounts","accountDetail"],maint:["maint","maintMachine","maintForm","maintDone"]};
  const active=Object.keys(groups).find(k=>groups[k].includes(S.view))||"home";
  $("#nav").innerHTML=navItems().map(([k,t])=>`<button ${k===active?'aria-current="page"':""} onclick="go('${k}',{}, null)">${t}</button>`).join("");
  $("#who").textContent=`${S.user.name} · ${S.user.role}`;
@@ -238,6 +255,12 @@ function vHome(){
   ${(()=>{const mc=ENROLL.filter(e=>e.member===u.memberId).map(e=>cls(e.cls)).sort(byDate);return `<div class="panel"><h2>Your classes</h2>${mc.length?`<div class="scroll"><table class="table"><tr><th>Class</th><th>Date</th><th>Time</th></tr>${mc.map(c=>`<tr><td>${esc(c.name)}</td><td>${day(c.date)}</td><td>${t12(c.time)}</td></tr>`).join("")}</table></div>`:`<p class="muted">You are not registered for any classes.</p>`}</div>`;})()}
   <div class="panel"><h2>Your certifications</h2><p>${certs.map(c=>`<span class="pill ok">${mach(c.machine).name}</span>`).join(" ")||'<span class="muted">None yet</span>'}</p></div>`;
  }
+ if(u.role==="Staff Member"){
+  const od=Object.values(ACCOUNTS).filter(a=>a.status==="Overdue").length;
+  return `<h1>Hi, ${u.name.split(" ")[0]}</h1><p class="muted">Staff Member dashboard</p>${msgHTML()}
+  <div class="tiles"><button class="tile" onclick="go('accounts',{acf:'All'})"><strong>Member Accounts</strong><span class="muted">View payment statuses and find overdue accounts</span></button></div>
+  <div class="panel"><h2>At a glance</h2><p style="margin:0">${od} member account${od===1?"":"s"} currently overdue.</p></div>`;
+ }
  if(u.role==="Class Coordinator"){
   return `<h1>Hi, ${u.name.split(" ")[0]}</h1><p class="muted">Class Coordinator dashboard</p>${msgHTML()}
   <div class="tiles"><button class="tile" onclick="go('manageClasses')"><strong>Manage Classes</strong><span class="muted">Create a class, set capacity, or update class details</span></button></div>
@@ -250,6 +273,7 @@ function vHome(){
  <div class="tiles"><button class="tile" onclick="go('certSearch')"><strong>${label}</strong><span class="muted">${sub}</span></button>
  ${u.role==="Monitor"?`<button class="tile" onclick="go('recordVisit',{vq:''})"><strong>Record Visit</strong><span class="muted">Check in a guest or day-pass user</span></button>
  <button class="tile" onclick="go('waiverStatus',{wq:''})"><strong>Waiver Status</strong><span class="muted">Verify a visitor's liability waiver</span></button>`:""}
+ ${u.role==="Shop Manager"?`<button class="tile" onclick="go('maint')"><strong>Manage Maintenance</strong><span class="muted">Record completed maintenance and repairs</span></button>`:""}
  <button class="tile" onclick="go('visitRecords')"><strong>Visit Records</strong><span class="muted">View recorded visits to verify attendance</span></button></div>
  <div class="panel"><h2>Machine status</h2><div class="scroll"><table class="table"><tr><th>Machine</th><th>Bay</th><th>Status</th></tr>
  ${MACHINES.map(m=>`<tr><td>${m.name}</td><td>${m.bay}</td><td>${m.out?'<span class="pill bad">Out of service</span>':'<span class="pill ok">Available</span>'}</td></tr>`).join("")}</table></div></div>`;
@@ -592,11 +616,99 @@ function vVisitRecords(){ // Steps 12-13
  ${list.map(r=>`<tr><td>${esc(vis(r.visitor).name)}</td><td>${r.type}</td><td>${day(r.date)}</td><td>${r.time}</td><td>${esc(r.by)}</td></tr>`).join("")}</table></div>`;
 }
 
+/* ===================== REQUIREMENT: VIEW OVERDUE MEMBER ACCOUNTS (UC 009) ===================== */
+const STATUSES=["All","Current","Overdue","Incomplete"];
+const statusPill=a=>a.status==="Current"?'<span class="pill ok">Current</span>':a.status==="Overdue"?'<span class="pill bad">Overdue</span>':'<span class="pill">Payment info incomplete</span>';
+function vAccounts(){ // Step 2 (list), Steps 3-6 (filter), Step 10 (list after clearing)
+ const f=S.sel.acf||"All";
+ const sim=!!S.sel.simNone;
+ let rows=MEMBERS.map(m=>({m,a:ACCOUNTS[m.id]})).filter(x=>x.a);
+ if(sim) rows=rows.map(x=>x.a.status==="Overdue"?{...x,a:{...x.a,status:"Current",due:0}}:x);
+ const shown=f==="All"?rows:rows.filter(x=>x.a.status===f);
+ return `<div class="crumbs">Member Accounts${f!=="All"?` › ${f}`:""}</div><h1>Member Accounts</h1>${msgHTML()}
+ <div class="panel">
+ <label for="acf">Payment status filter</label><select id="acf" onchange="go('accounts',{acf:this.value})">${STATUSES.map(x=>`<option ${x===f?"selected":""}>${x}</option>`).join("")}</select>
+ ${f!=="All"?`<div><button class="btn secondary" type="button" onclick="go('accounts',{acf:'All'})">Clear Filter</button></div>`:""}
+ <label class="check muted"><input type="checkbox" ${sim?"checked":""} onchange="go('accounts',{simNone:this.checked})"> Prototype test only: simulate no overdue accounts</label></div>
+ <div class="panel scroll">${shown.length?`<table class="table"><tr><th>Member</th><th>Tier</th><th>Payment status</th><th>Last payment</th><th></th></tr>
+ ${shown.map(({m,a})=>`<tr><td><strong>${m.name}</strong><br><span class="muted">${m.id}</span></td><td>${m.tier}</td><td>${statusPill(a)}</td><td>${a.lastPaid?day(a.lastPaid):'<span class="muted">Not on record</span>'}</td>
+  <td><button class="btn secondary" style="margin:0" onclick="go('accountDetail',{acct:'${m.id}'})">View Account</button></td></tr>`).join("")}</table>`
+ :`<div class="msg ${f==="Overdue"?"ok":"bad"}" role="status">${f==="Overdue"?"No overdue accounts were found.":`No accounts with status “${f}” were found.`}<small>${f==="Overdue"?"All members with payment records are current.":"Try a different filter."}</small></div>`}</div>`;
+}
+function vAccountDetail(){ // Step 8; Alt 8a/8b
+ const m=mem(S.sel.acct),a=ACCOUNTS[m.id];
+ const incomplete=!a.lastPaid;
+ return `<div class="crumbs"><button class="linkbtn" onclick="go('accounts')">Member Accounts</button> › ${m.name}</div>
+ <h1>${m.name}</h1>
+ ${incomplete?`<div class="msg bad" role="alert">This member's payment information is incomplete.<small>Showing the information on record. The payment has not been verified, so it is not shown as current.</small></div>`:""}
+ <div class="panel"><h2>Account information</h2><dl><dt>Member ID</dt><dd>${m.id}</dd><dt>Membership tier</dt><dd>${m.tier}</dd><dt>Payment status</dt><dd>${statusPill(a)}</dd>
+ <dt>Last payment date</dt><dd>${a.lastPaid?day(a.lastPaid):'<span class="muted">Not on record</span>'}</dd>
+ <dt>Amount due</dt><dd>${a.due===null?'<span class="muted">Not on record</span>':"$"+a.due.toFixed(2)}</dd></dl>
+ <div><button class="btn" onclick="go('accounts')">Back to Account List</button><button class="btn secondary" onclick="go('accounts',{acf:'All'})">Clear Filter</button></div></div>`;
+}
+
+/* ===================== REQUIREMENT: RECORD MACHINE MAINTENANCE AND REPAIRS (UC 010) ===================== */
+function vMaint(){ // Step 2
+ return `<div class="crumbs">Manage Maintenance › Machines</div><h1>Manage Maintenance</h1>${msgHTML()}
+ <div class="panel scroll"><table class="table"><tr><th>Machine</th><th>Bay</th><th>Status</th><th>Last service</th><th></th></tr>
+ ${MACHINES.map(m=>{const h=MAINT.filter(r=>r.machine===m.id).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time))[0];
+  return `<tr><td><strong>${m.name}</strong></td><td>${m.bay}</td><td>${m.out?'<span class="pill bad">Out of service</span>':'<span class="pill ok">Available</span>'}</td>
+  <td>${h?`${day(h.date)} · ${h.type}`:'<span class="muted">None recorded</span>'}</td>
+  <td><button class="btn secondary" style="margin:0" onclick="go('maintMachine',{mm:'${m.id}'})">Select</button></td></tr>`;}).join("")}</table></div>`;
+}
+function vMaintMachine(){ // Step 4
+ const m=mach(S.sel.mm),hist=MAINT.filter(r=>r.machine===m.id).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+ return `<div class="crumbs"><button class="linkbtn" onclick="go('maint')">Manage Maintenance</button> › ${m.name}</div>
+ <h1>${m.name}</h1>${msgHTML()}
+ <div class="panel"><dl><dt>Bay</dt><dd>${m.bay}</dd><dt>Status</dt><dd>${m.out?'<span class="pill bad">Out of service</span>':'<span class="pill ok">Available</span>'}</dd><dt>Service records</dt><dd>${hist.length}</dd></dl>
+ <button class="btn" onclick="go('maintForm',{md:null})">Record Maintenance</button></div>
+ <div class="panel"><h2>Service history</h2>${hist.length?`<div class="scroll"><table class="table"><tr><th>Date</th><th>Type</th><th>Service</th><th>Performed by</th><th>Run hours</th><th>Notes</th></tr>
+ ${hist.map(r=>`<tr><td>${day(r.date)}<br><span class="muted">${t12(r.time)}</span></td><td>${r.type}</td><td>${esc(r.service)}</td><td>${esc(r.by)}</td><td>${r.hours}</td><td>${esc(r.notes||"")}</td></tr>`).join("")}</table></div>`:`<p class="muted">No maintenance has been recorded for this machine yet.</p>`}</div>`;
+}
+function vMaintForm(){ // Step 6
+ const m=mach(S.sel.mm),d=S.sel.md||{date:TODAY,time:"",type:"",service:"",by:"",hours:"",notes:""};
+ const opt=(v,t)=>`<option value="${v}" ${v===d.type?"selected":""}>${t}</option>`;
+ return `<div class="crumbs"><button class="linkbtn" onclick="go('maint')">Manage Maintenance</button> › <button class="linkbtn" onclick="go('maintMachine')">${m.name}</button> › Record Maintenance</div>
+ <h1>Record Maintenance</h1><p class="muted">${m.name} · ${m.bay} bay</p>${msgHTML()}
+ <div class="panel"><form onsubmit="event.preventDefault();submitMaint()">
+ <label for="md">Date</label><input id="md" type="date" value="${d.date}">
+ <label for="mt">Time</label><input id="mt" type="time" value="${d.time}">
+ <label for="mty">Type</label><select id="mty">${opt("","Select a type")}${opt("Maintenance","Maintenance")}${opt("Repair","Repair")}</select>
+ <label for="ms">Service performed</label><input id="ms" value="${esc(d.service)}" placeholder="e.g. Blade replacement">
+ <label for="mb">Performed by</label><input id="mb" value="${esc(d.by)}" placeholder="e.g. Marcus Ojeda">
+ <label for="mh">Machine run hours</label><input id="mh" inputmode="numeric" value="${esc(d.hours)}">
+ <label for="mn">Notes</label><input id="mn" value="${esc(d.notes)}" placeholder="Optional">
+ <label class="check muted"><input type="checkbox" id="simErr3"> Prototype test only: simulate a technical error when saving</label>
+ <div><button class="btn" type="submit">Submit</button><button class="btn secondary" type="button" onclick="go('maintMachine')">Cancel</button></div></form></div>`;
+}
+function submitMaint(){ // Step 9 -> Step 8 validation -> Step 10
+ const d={date:$("#md").value,time:$("#mt").value,type:$("#mty").value,service:$("#ms").value.trim(),by:$("#mb").value.trim(),hours:$("#mh").value.trim(),notes:$("#mn").value.trim()};
+ const labels={date:"date",time:"time",type:"type",service:"service performed",by:"performed by",hours:"machine run hours"};
+ const missing=Object.keys(labels).filter(k=>!d[k]).map(k=>labels[k]);
+ if(missing.length) // Alternate course 8a/8b
+  return go("maintForm",{md:d}, {type:"bad",text:"Required maintenance information is missing.",sub:`Complete: ${missing.join(", ")}.`});
+ const h=Number(d.hours),bad=[];
+ if(d.date>TODAY) bad.push("the date cannot be in the future");
+ if(!Number.isFinite(h)||h<0) bad.push("run hours must be a number of 0 or more");
+ if(bad.length) // Alternate course 8c/8d
+  return go("maintForm",{md:d}, {type:"bad",text:"Some information is invalid.",sub:`Please correct: ${bad.join("; ")}.`});
+ if($("#simErr3").checked) // Alternate course 10a/10b
+  return go("maintForm",{md:d}, {type:"bad",text:"The maintenance record could not be saved because of a technical error.",sub:"The record was NOT saved. Please try again."});
+ const rec={machine:S.sel.mm,...d,hours:h};
+ MAINT.push(rec);S.sel.lastMaint=rec;go("maintDone",{md:null});
+}
+function vMaintDone(){ // Step 11
+ const r=S.sel.lastMaint,m=mach(r.machine);
+ return `<h1>Maintenance record saved</h1>
+ <div class="msg ok" role="status">The ${r.type.toLowerCase()} record for the ${m.name} was successfully saved.<small>${esc(r.service)} · ${day(r.date)} at ${t12(r.time)} · performed by ${esc(r.by)} · ${r.hours} run hours</small></div>
+ <button class="btn" onclick="go('maintMachine',{mm:'${m.id}'})">View Service History</button><button class="btn secondary" onclick="go('maint')">Back to Machines</button>`;
+}
+
 /* ===================== RENDER ===================== */
 function render(){
  if(!S.user){$("#hdr").hidden=true;const G={waiverForm:vWaiverForm,waiverTerms:vWaiverTerms,waiverConfirm:vWaiverConfirm,waiverDone:vWaiverDone};$("#app").innerHTML=(G[S.view]||vLogin)();return;}
  $("#hdr").hidden=false;renderNav();
- const V={home:vHome,machines:vMachines,slots:vSlots,confirm:vConfirm,done:vDone,certSearch:vCertSearch,certMember:vCertMember,certDone:vCertDone,classes:vClasses,classDetail:vClassDetail,classDone:vClassDone,manageClasses:vManageClasses,classForm:vClassForm,classSaved:vClassSaved,waiverStatus:vWaiverStatus,recordVisit:vRecordVisit,visitorReview:vVisitorReview,visitDone:vVisitDone,visitRecords:vVisitRecords};
+ const V={home:vHome,machines:vMachines,slots:vSlots,confirm:vConfirm,done:vDone,certSearch:vCertSearch,certMember:vCertMember,certDone:vCertDone,classes:vClasses,classDetail:vClassDetail,classDone:vClassDone,manageClasses:vManageClasses,classForm:vClassForm,classSaved:vClassSaved,waiverStatus:vWaiverStatus,recordVisit:vRecordVisit,visitorReview:vVisitorReview,visitDone:vVisitDone,visitRecords:vVisitRecords,accounts:vAccounts,accountDetail:vAccountDetail,maint:vMaint,maintMachine:vMaintMachine,maintForm:vMaintForm,maintDone:vMaintDone};
  $("#app").innerHTML=(V[S.view]||vHome)();
 }
 render();

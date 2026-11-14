@@ -12,6 +12,7 @@ The prototype runs entirely in the browser using sample data. Nothing is saved: 
 |---|---|---|
 | Member | `robert.byrne` | `member123` |
 | Member (under 18) | `avery.lin` | `youth555` |
+| Staff Member | `alex.morgan` | `staff246` |
 | Shop Manager | `marcus.ojeda` | `shop456` |
 | Monitor | `kelsey.park` | `monitor789` |
 | Class Coordinator | `priya.raghunathan` | `class321` |
@@ -26,6 +27,8 @@ The prototype runs entirely in the browser using sample data. Nothing is saved: 
 | 2 | Create and manage classes | UC 005 | Class Coordinator |
 | 2 | Complete a guest liability waiver | UC 007 | Guest (no login: "Complete Liability Waiver" on the sign-in page); Monitor checks "Waiver Status" |
 | 2 | Record a guest or day-pass visit | UC 008 | Monitor ("Record Visit"); Monitor and Shop Manager view "Visit Records" |
+| 3 | View overdue member accounts | UC 009 | Staff Member ("Member Accounts") |
+| 3 | Record machine maintenance and repairs | UC 010 | Shop Manager ("Manage Maintenance") |
 
 ## Sample visitors (for UC 007 and UC 008)
 
@@ -38,9 +41,17 @@ The prototype runs entirely in the browser using sample data. Nothing is saved: 
 | Leo Martinez | Day-Pass User | Day-pass not paid, check-in blocked |
 | Morgan Lee | Day-Pass User | Already checked in today, no duplicate |
 
-The waiver and check-in screens have a "Prototype test only" checkbox to simulate a save error.
+## Sample member accounts (for UC 009)
+
+| Member | Payment status |
+|---|---|
+| Robert Byrne, Avery Lin | Current |
+| Jordan Fontaine, Tia Nwosu | Overdue |
+| Miguel Reyes | Payment information incomplete |
+
+The waiver, check-in, member accounts and maintenance screens have "Prototype test only" checkboxes to simulate errors or empty results.
 
 ## Files
 
-- `index.html`: current prototype (Sprint 1 + Sprint 2)
+- `index.html`: current prototype (Sprints 1–3)
 - `Ironwood Community Workshop – Sprint 1 Prototype.html`: Sprint 1 version, kept for reference
