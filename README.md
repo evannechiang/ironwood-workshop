@@ -27,8 +27,8 @@ The prototype runs entirely in the browser using sample data. Nothing is saved: 
 | 2 | Create and manage classes | UC 005 | Class Coordinator |
 | 2 | Complete a guest liability waiver | UC 007 | Guest (no login: "Complete Liability Waiver" on the sign-in page); Monitor checks "Waiver Status" |
 | 2 | Record a guest or day-pass visit | UC 008 | Monitor ("Record Visit"); Monitor and Shop Manager view "Visit Records" |
-| 3 | View overdue member accounts | UC 009 | Staff Member ("Member Accounts") |
-| 3 | Record machine maintenance and repairs | UC 010 | Shop Manager ("Manage Maintenance") |
+| 4 | View overdue member accounts | UC 009 | Staff Member ("Member Accounts") |
+| 4 | Record machine maintenance and repairs | UC 010 | Shop Manager ("Manage Maintenance") |
 
 ## Sample visitors (for UC 007 and UC 008)
 
@@ -53,5 +53,5 @@ The waiver, check-in, member accounts and maintenance screens have "Prototype te
 
 ## Files
 
-- `index.html`: current prototype (Sprints 1–3)
+- `index.html`: current prototype (Sprints 1–4)
 - `Ironwood Community Workshop – Sprint 1 Prototype.html`: Sprint 1 version, kept for reference
