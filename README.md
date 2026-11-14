@@ -25,8 +25,8 @@ The prototype runs entirely in the browser using sample data. Nothing is saved: 
 | 1 | Manage machine certifications | UC 002 | Shop Manager (records), Monitor (views) |
 | 2 | Register for class | UC 004 | Member |
 | 2 | Create and manage classes | UC 005 | Class Coordinator |
-| 2 | Complete a guest liability waiver | UC 007 | Guest (no login: "Complete Liability Waiver" on the sign-in page); Monitor checks "Waiver Status" |
-| 2 | Record a guest or day-pass visit | UC 008 | Monitor ("Record Visit"); Monitor and Shop Manager view "Visit Records" |
+| 3 | Complete a guest liability waiver | UC 007 | Guest (no login: "Complete Liability Waiver" on the sign-in page); Monitor checks "Waiver Status" |
+| 3 | Record a guest or day-pass visit | UC 008 | Monitor ("Record Visit"); Monitor and Shop Manager view "Visit Records" |
 | 4 | View overdue member accounts | UC 009 | Staff Member ("Member Accounts") |
 | 4 | Record machine maintenance and repairs | UC 010 | Shop Manager ("Manage Maintenance") |
 
