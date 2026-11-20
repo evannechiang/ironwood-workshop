@@ -92,12 +92,13 @@ const USERS={
  "alex.morgan":{pw:"staff246",role:"Staff Member",name:"Alex Morgan"}
 };
 const MEMBERS=[
- {id:"M-1042",name:"Robert Byrne",tier:"Standard",age:38},
- {id:"M-1107",name:"Jordan Fontaine",tier:"Standard",age:29},
- {id:"M-1188",name:"Avery Lin",tier:"Youth",age:16},
- {id:"M-1203",name:"Tia Nwosu",tier:"Business",age:41},
- {id:"M-1251",name:"Miguel Reyes",tier:"Standard",age:33}
+ {id:"M-1042",name:"Robert Byrne",tier:"Standard",age:38,dob:"1988-03-14",phone:"317-555-0121",email:"robert.byrne@example.com",joined:"2024-02-10"},
+ {id:"M-1107",name:"Jordan Fontaine",tier:"Standard",age:29,dob:"1997-06-02",phone:"317-555-0134",email:"jordan.fontaine@example.com",joined:"2025-01-18"},
+ {id:"M-1188",name:"Avery Lin",tier:"Youth",age:16,dob:"2010-02-09",phone:"317-555-0156",email:"avery.lin@example.com",joined:"2025-09-06"},
+ {id:"M-1203",name:"Tia Nwosu",tier:"Business",age:41,dob:"1985-08-21",phone:"317-555-0168",email:"tia.nwosu@example.com",joined:"2023-05-30"},
+ {id:"M-1251",name:"Miguel Reyes",tier:"Standard",age:33,dob:"1993-01-27",phone:"317-555-0182",email:"miguel.reyes@example.com",joined:"2026-03-02"}
 ];
+const TIERS=["Standard","Youth","Business"];
 const MACHINES=[
  {id:"L1",name:"Laser 1 (big)",bay:"Digital",out:false},
  {id:"L2",name:"Laser 2 (small)",bay:"Digital",out:false},
@@ -180,6 +181,8 @@ const left=c=>c.cap-taken(c);
 const t12=t=>{const [h,m]=t.split(":").map(Number);return `${h%12||12}:${String(m).padStart(2,"0")} ${h<12?"AM":"PM"}`;};
 const byDate=(a,b)=>(a.date+a.time).localeCompare(b.date+b.time);
 const vis=id=>VISITORS.find(v=>v.id===id);
+const ageOn=dob=>{const [y,m,d]=dob.split("-").map(Number),t=new Date();let a=t.getFullYear()-y;if(t.getMonth()+1<m||(t.getMonth()+1===m&&t.getDate()<d))a--;return a;};
+const digits=t=>String(t).replace(/\D/g,"");
 const waiverExp=v=>{if(!v.waiver)return null;const [y,m,d]=v.waiver.split("-").map(Number);return iso(new Date(y+1,m-1,d));};
 const waiverValid=v=>!!v.waiver&&waiverExp(v)>TODAY;
 const dayY=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});};
@@ -222,7 +225,7 @@ function vLogin(){
    <tr><td>Member (under 18)</td><td><code>avery.lin</code></td><td><code>youth555</code></td></tr>
    <tr><td>Staff Member</td><td><code>alex.morgan</code></td><td><code>staff246</code></td></tr>
   </table></div>
-  <p class="muted" style="margin-bottom:0">Sprint 1: reserve a machine and manage machine certifications. Sprint 2 adds: register for a class (members) and create and manage classes (class coordinator). Sprint 3 adds: complete a guest liability waiver (guests, no login) and record a guest or day-pass visit (monitor). Sprint 4 adds: view overdue member accounts (staff member) and record machine maintenance and repairs (shop manager).</p>
+  <p class="muted" style="margin-bottom:0">Sprint 1: reserve a machine and manage machine certifications. Sprint 2 adds: register for a class (members) and create and manage classes (class coordinator). Sprint 3 adds: complete a guest liability waiver (guests, no login) and record a guest or day-pass visit (monitor). Sprint 4 adds: view overdue member accounts (staff member) and record machine maintenance and repairs (shop manager). Sprint 5 adds: manage member records (staff member registers members; shop manager and monitor look them up) and validate machine certifications (shop manager).</p>
  </div></div>`;
 }
 
@@ -231,12 +234,12 @@ function navItems(){
  const r=S.user.role;
  if(r==="Member") return [["home","Home"],["machines","Reserve machine"],["classes","Classes"]];
  if(r==="Class Coordinator") return [["home","Home"],["manageClasses","Manage Classes"]];
- if(r==="Staff Member") return [["home","Home"],["accounts","Member Accounts"]];
- if(r==="Shop Manager") return [["home","Home"],["certSearch","Manage certifications"],["maint","Manage Maintenance"],["visitRecords","Visit Records"]];
- return [["home","Home"],["certSearch","Check certifications"],["recordVisit","Record Visit"],["waiverStatus","Waiver Status"],["visitRecords","Visit Records"]];
+ if(r==="Staff Member") return [["home","Home"],["members","Manage Members"],["accounts","Member Accounts"]];
+ if(r==="Shop Manager") return [["home","Home"],["certSearch","Manage Certifications"],["lookup","Member Lookup"],["maint","Manage Maintenance"],["visitRecords","Visit Records"]];
+ return [["home","Home"],["certSearch","Check certifications"],["lookup","Member Lookup"],["recordVisit","Record Visit"],["waiverStatus","Waiver Status"],["visitRecords","Visit Records"]];
 }
 function renderNav(){
- const groups={machines:["machines","slots","confirm","done"],certSearch:["certSearch","certMember","certDone"],classes:["classes","classDetail","classDone"],manageClasses:["manageClasses","classForm","classSaved"],recordVisit:["recordVisit","visitorReview","visitDone"],waiverStatus:["waiverStatus"],visitRecords:["visitRecords"],accounts:["accounts","accountDetail"],maint:["maint","maintMachine","maintForm","maintDone"]};
+ const groups={machines:["machines","slots","confirm","done"],certSearch:["certSearch","certMember","certDone"],classes:["classes","classDetail","classDone"],manageClasses:["manageClasses","classForm","classSaved"],recordVisit:["recordVisit","visitorReview","visitDone"],waiverStatus:["waiverStatus"],visitRecords:["visitRecords"],accounts:["accounts","accountDetail"],members:["members","memberForm","memberDone"],lookup:["lookup","lookupMember"],maint:["maint","maintMachine","maintForm","maintDone"]};
  const active=Object.keys(groups).find(k=>groups[k].includes(S.view))||"home";
  $("#nav").innerHTML=navItems().map(([k,t])=>`<button ${k===active?'aria-current="page"':""} onclick="go('${k}',{}, null)">${t}</button>`).join("");
  $("#who").textContent=`${S.user.name} · ${S.user.role}`;
@@ -258,7 +261,8 @@ function vHome(){
  if(u.role==="Staff Member"){
   const od=Object.values(ACCOUNTS).filter(a=>a.status==="Overdue").length;
   return `<h1>Hi, ${u.name.split(" ")[0]}</h1><p class="muted">Staff Member dashboard</p>${msgHTML()}
-  <div class="tiles"><button class="tile" onclick="go('accounts',{acf:'All'})"><strong>Member Accounts</strong><span class="muted">View payment statuses and find overdue accounts</span></button></div>
+  <div class="tiles"><button class="tile" onclick="go('members')"><strong>Manage Members</strong><span class="muted">Register a new member or view member records</span></button>
+  <button class="tile" onclick="go('accounts',{acf:'All'})"><strong>Member Accounts</strong><span class="muted">View payment statuses and find overdue accounts</span></button></div>
   <div class="panel"><h2>At a glance</h2><p style="margin:0">${od} member account${od===1?"":"s"} currently overdue.</p></div>`;
  }
  if(u.role==="Class Coordinator"){
@@ -267,12 +271,13 @@ function vHome(){
   <div class="panel"><h2>Upcoming classes</h2><div class="scroll"><table class="table"><tr><th>Class</th><th>Date</th><th>Enrolled</th></tr>
   ${[...CLASSES].sort(byDate).map(c=>`<tr><td>${esc(c.name)}</td><td>${day(c.date)} · ${t12(c.time)}</td><td>${taken(c)} / ${c.cap}</td></tr>`).join("")}</table></div></div>`;
  }
- const label=u.role==="Shop Manager"?"Manage certifications":"Check certifications";
+ const label=u.role==="Shop Manager"?"Manage Certifications":"Check certifications";
  const sub=u.role==="Shop Manager"?"Look up a member and record a new machine certification":"Look up whether a member is cleared on a machine";
  return `<h1>Hi, ${u.name.split(" ")[0]}</h1><p class="muted">${u.role} dashboard</p>${msgHTML()}
  <div class="tiles"><button class="tile" onclick="go('certSearch')"><strong>${label}</strong><span class="muted">${sub}</span></button>
  ${u.role==="Monitor"?`<button class="tile" onclick="go('recordVisit',{vq:''})"><strong>Record Visit</strong><span class="muted">Check in a guest or day-pass user</span></button>
  <button class="tile" onclick="go('waiverStatus',{wq:''})"><strong>Waiver Status</strong><span class="muted">Verify a visitor's liability waiver</span></button>`:""}
+ <button class="tile" onclick="go('lookup',{lq:''})"><strong>Member Lookup</strong><span class="muted">Search for a member by name or ID</span></button>
  ${u.role==="Shop Manager"?`<button class="tile" onclick="go('maint')"><strong>Manage Maintenance</strong><span class="muted">Record completed maintenance and repairs</span></button>`:""}
  <button class="tile" onclick="go('visitRecords')"><strong>Visit Records</strong><span class="muted">View recorded visits to verify attendance</span></button></div>
  <div class="panel"><h2>Machine status</h2><div class="scroll"><table class="table"><tr><th>Machine</th><th>Bay</th><th>Status</th></tr>
@@ -338,17 +343,26 @@ function vDone(){
 function vCertSearch(){
  const q=(S.sel.q||"").toLowerCase();
  const res=q?MEMBERS.filter(m=>m.name.toLowerCase().includes(q)||m.id.toLowerCase().includes(q)):MEMBERS;
- const title=S.user.role==="Shop Manager"?"Manage certifications":"Check certifications";
+ const title=S.user.role==="Shop Manager"?"Manage Certifications":"Check certifications";
  return `<div class="crumbs">${title} › Find member</div><h1>${title}</h1>${msgHTML()}
  <div class="panel"><form onsubmit="event.preventDefault();go('certSearch',{q:$('#q').value.trim()})">
  <label for="q">Search member by name or ID</label><input id="q" value="${esc(S.sel.q||"")}" placeholder="e.g. Avery or M-1188">
  <button class="btn" type="submit">Search</button>${S.sel.q?`<button class="btn secondary" type="button" onclick="go('certSearch',{q:''})">Clear</button>`:""}</form></div>
  <div class="panel scroll">${res.length?`<table class="table"><tr><th>Member</th><th>ID</th><th>Tier</th><th>Certifications</th><th></th></tr>
- ${res.map(m=>`<tr><td><strong>${m.name}</strong></td><td>${m.id}</td><td>${m.tier}</td><td>${CERTS.filter(c=>c.member===m.id).length}</td><td><button class="btn secondary" style="margin:0" onclick="go('certMember',{member:'${m.id}'})">Select</button></td></tr>`).join("")}</table>`
+ ${res.map(m=>`<tr><td><strong>${m.name}</strong></td><td>${m.id}</td><td>${m.tier}</td><td>${CERTS.filter(c=>c.member===m.id).length}</td><td><button class="btn secondary" style="margin:0" onclick="go('certMember',{member:'${m.id}',cd:null})">Select</button></td></tr>`).join("")}</table>`
  :`<p class="muted">No member matches “${esc(S.sel.q)}”. Check the spelling or search by member ID.</p>`}</div>`;
 }
-function vCertMember(){
+function vCertMember(){ // UC 002 / UC 012 Step 4
  const m=mem(S.sel.member),certs=CERTS.filter(c=>c.member===m.id),manager=S.user.role==="Shop Manager";
+ const d=S.sel.cd||{mc:"",method:"",date:"",passed:false};
+ // UC 012 Step 6: check age restriction and existing active certification as soon as a machine is selected
+ let check="";
+ if(manager&&d.mc){
+  const x=mach(d.mc),ex=certOf(m.id,d.mc);
+  if(m.age<18&&x.bay==="Metal") check=`<div class="msg bad" role="alert">${m.name} cannot be certified on the ${x.name}.<small>Members under 18 cannot be certified for machines in the metal bay.</small></div>`;
+  else if(ex) check=`<div class="msg bad" role="alert">${m.name} already holds an active certification for the ${x.name}.<small>Existing record: ${ex.date} · ${ex.method} · approved by ${ex.by}. A duplicate certification will not be created.</small></div>`;
+  else check=`<div class="msg ok" role="status">Eligible for the ${x.name}.<small>No age restriction applies and no active certification exists for this machine.</small></div>`;
+ }
  return `<div class="crumbs"><button class="linkbtn" onclick="go('certSearch')">Find member</button> › ${m.name}</div>
  <h1>${m.name}</h1>${msgHTML()}
  <div class="panel"><dl><dt>Member ID</dt><dd>${m.id}</dd><dt>Tier</dt><dd>${m.tier}</dd><dt>Age</dt><dd>${m.age}${m.age<18?' <span class="pill bad">Under 18</span>':""}</dd></dl></div>
@@ -356,36 +370,46 @@ function vCertMember(){
  ${certs.map(c=>`<tr><td>${mach(c.machine).name}</td><td>${mach(c.machine).bay}</td><td>${c.date}</td><td>${c.method}</td><td>${c.by}</td></tr>`).join("")}</table></div>`:`<p class="muted">No certifications on record.</p>`}</div>
  ${manager?`<div class="panel"><h2>Record a new certification</h2>
   <form onsubmit="event.preventDefault();recordCert()">
-  <label for="mc">Machine</label><select id="mc"><option value="">Select a machine</option>${MACHINES.map(x=>`<option value="${x.id}">${x.name} – ${x.bay} bay</option>`).join("")}</select>
+  <label for="mc">Machine</label><select id="mc" onchange="certPickMachine()"><option value="">Select a machine</option>${MACHINES.map(x=>`<option value="${x.id}" ${x.id===d.mc?"selected":""}>${x.name} – ${x.bay} bay</option>`).join("")}</select>
+  ${check}
   <fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;margin:.9rem 0 .3rem">How was it earned?</legend>
-   <div class="radio"><label><input type="radio" name="method" value="Class"> Completed class</label><label><input type="radio" name="method" value="One-on-one checkout"> One-on-one checkout</label></div></fieldset>
-  <label class="check"><input type="checkbox" id="passed"> I confirm this member passed the required class or checkout.</label>
-  <button class="btn" type="submit">Record certification</button></form></div>`
+   <div class="radio"><label><input type="radio" name="method" value="Class" ${d.method==="Class"?"checked":""}> Completed class</label><label><input type="radio" name="method" value="One-on-one checkout" ${d.method==="One-on-one checkout"?"checked":""}> One-on-one checkout</label></div></fieldset>
+  <label for="cdate">Date completed</label><input id="cdate" type="date" value="${d.date}">
+  <label class="check"><input type="checkbox" id="passed" ${d.passed?"checked":""}> I confirm this member passed the required class or checkout.</label>
+  <label class="check muted"><input type="checkbox" id="simErr4"> Prototype test only: simulate a technical error when saving</label>
+  <div><button class="btn" type="submit">Record Certification</button></div></form></div>`
  :`<p class="muted">Monitors can view certifications. Only the shop manager can record new ones.</p>`}`;
 }
-function recordCert(){
- const m=mem(S.sel.member),mc=$("#mc").value,methodEl=document.querySelector('input[name="method"]:checked'),passed=$("#passed").checked;
- if(!mc||!methodEl||!passed){ // Alternate course 8c/8d
-  const miss=[!mc&&"machine",!methodEl&&"how it was earned",!passed&&"pass confirmation"].filter(Boolean).join(", ");
-  return go("certMember",{}, {type:"bad",text:"Some required information is missing.",sub:`Complete: ${miss}.`});
- }
- const machine=mach(mc);
- if(m.age<18&&machine.bay==="Metal"){ // Alternate course 6a/6b
-  return go("certMember",{}, {type:"bad",text:`Cannot certify ${m.name} on the ${machine.name}.`,sub:"Members under 18 cannot be certified for machines in the metal bay."});
- }
- const existing=certOf(m.id,mc);
- if(existing){ // Alternate course 8a/8b
-  return go("certMember",{}, {type:"bad",text:`${m.name} is already certified on the ${machine.name}.`,sub:`Existing record: ${existing.date}, ${existing.method}, approved by ${existing.by}. No duplicate was created.`});
- }
- const rec={member:m.id,machine:mc,date:TODAY,method:methodEl.value,by:S.user.name};
- CERTS.push(rec); // Step 8: record machine, member, date, approving staff
- S.sel.last=rec;go("certDone");
+function certDraft(){const el=document.querySelector('input[name="method"]:checked');return {mc:$("#mc").value,method:el?el.value:"",date:$("#cdate").value,passed:$("#passed").checked};}
+function certPickMachine(){ go("certMember",{cd:certDraft()}); } // UC 012 Step 5 -> Step 6
+function recordCert(){ // UC 012 Step 9
+ const m=mem(S.sel.member),d=certDraft();
+ if(!d.mc) // Alternate course 8a/8b (missing machine)
+  return go("certMember",{cd:d}, {type:"bad",text:"Required certification information is missing.",sub:"Complete: machine."+(!d.method?" Also select how it was earned.":"")+(!d.date?" Also enter the date completed.":"")});
+ const machine=mach(d.mc);
+ if(m.age<18&&machine.bay==="Metal") // Alternate course 6a/6b
+  return go("certMember",{cd:d}, {type:"bad",text:`Cannot certify ${m.name} on the ${machine.name}.`,sub:"Members under 18 cannot be certified for machines in the metal bay. The certification was not recorded."});
+ const existing=certOf(m.id,d.mc);
+ if(existing) // Alternate course 6c/6d
+  return go("certMember",{cd:d}, {type:"bad",text:`${m.name} is already certified on the ${machine.name}.`,sub:`Existing record: ${existing.date}, ${existing.method}, approved by ${existing.by}. No duplicate was created.`});
+ const miss=[!d.method&&"how it was earned",!d.date&&"date completed"].filter(Boolean);
+ if(miss.length) // Alternate course 8a/8b (missing)
+  return go("certMember",{cd:d}, {type:"bad",text:"Required certification information is missing.",sub:`Complete: ${miss.join(", ")}.`});
+ if(d.date>TODAY) // Alternate course 8a/8b (incorrect)
+  return go("certMember",{cd:d}, {type:"bad",text:"Some certification information is incorrect.",sub:"The date completed cannot be in the future."});
+ if(!d.passed) // Alternate course 8c/8d
+  return go("certMember",{cd:d}, {type:"bad",text:"The pass confirmation has not been completed.",sub:"Confirm that the member passed the required class or checkout before recording the certification."});
+ if($("#simErr4").checked) // Alternate course 10a/10b
+  return go("certMember",{cd:d}, {type:"bad",text:"The certification could not be saved because of a technical error.",sub:"The member's certification status was NOT updated. Please try again."});
+ const rec={member:m.id,machine:d.mc,date:d.date,method:d.method,by:S.user.name};
+ CERTS.push(rec); // Step 10: save and associate with the member
+ S.sel.last=rec;go("certDone",{cd:null}); // Step 11
 }
 function vCertDone(){
  const r=S.sel.last,m=mem(r.member);
  return `<h1>Certification recorded</h1>
- <div class="msg ok" role="status">${m.name} is now certified on the ${mach(r.machine).name}.<small>Recorded ${r.date} · ${r.method} · approved by ${r.by}</small></div>
- <button class="btn" onclick="go('certMember',{member:'${m.id}'})">View member</button><button class="btn secondary" onclick="go('certSearch',{q:''})">Find another member</button>`;
+ <div class="msg ok" role="status">The certification has been successfully recorded. ${m.name} is now certified on the ${mach(r.machine).name}.<small>Completed ${r.date} · ${r.method} · approved by ${r.by}</small></div>
+ <button class="btn" onclick="go('certMember',{member:'${m.id}',cd:null})">View member</button><button class="btn secondary" onclick="go('certSearch',{q:''})">Find another member</button>`;
 }
 
 /* ===================== REQUIREMENT 4: REGISTER FOR CLASS (UC 004) ===================== */
@@ -704,11 +728,81 @@ function vMaintDone(){ // Step 11
  <button class="btn" onclick="go('maintMachine',{mm:'${m.id}'})">View Service History</button><button class="btn secondary" onclick="go('maint')">Back to Machines</button>`;
 }
 
+/* ===================== REQUIREMENT: MANAGE MEMBER RECORDS (UC 011) ===================== */
+function vMembers(){ // Step 2: member management page
+ const list=[...MEMBERS].sort((a,b)=>a.name.localeCompare(b.name));
+ return `<div class="crumbs">Manage Members</div><h1>Manage Members</h1>${msgHTML()}
+ <button class="btn" style="margin-top:0" onclick="go('memberForm',{nd:null})">Register New Member</button>
+ <div class="panel scroll"><table class="table"><tr><th>Member</th><th>Tier</th><th>Date of birth</th><th>Phone</th><th>Joined</th></tr>
+ ${list.map(m=>`<tr><td><strong>${esc(m.name)}</strong><br><span class="muted">${m.id}</span></td><td>${m.tier}</td><td>${dayY(m.dob)}</td><td>${esc(m.phone)}</td><td>${dayY(m.joined)}</td></tr>`).join("")}</table></div>`;
+}
+function vMemberForm(){ // Step 4: new member registration form
+ const d=S.sel.nd||{name:"",dob:"",phone:"",email:"",tier:""};
+ return `<div class="crumbs"><button class="linkbtn" onclick="go('members')">Manage Members</button> › Register New Member</div>
+ <h1>Register New Member</h1>${msgHTML()}
+ <div class="panel"><form novalidate onsubmit="event.preventDefault();submitMember()">
+ <label for="nn">Full name</label><input id="nn" value="${esc(d.name)}" autocomplete="off">
+ <label for="nb">Date of birth</label><input id="nb" type="date" value="${d.dob}">
+ <label for="np">Phone</label><input id="np" type="tel" value="${esc(d.phone)}" placeholder="e.g. 317-555-0199">
+ <label for="ne">Email</label><input id="ne" type="email" value="${esc(d.email)}" placeholder="e.g. name@example.com">
+ <label for="nt">Membership tier</label><select id="nt"><option value="">Select a tier</option>${TIERS.map(t=>`<option ${t===d.tier?"selected":""}>${t}</option>`).join("")}</select>
+ <label class="check muted"><input type="checkbox" id="simErr5"> Prototype test only: simulate a technical error when saving</label>
+ <div><button class="btn" type="submit">Submit Registration</button><button class="btn secondary" type="button" onclick="go('members')">Cancel</button></div></form></div>`;
+}
+function submitMember(){ // Step 7 -> Step 6 validation -> Step 8
+ const d={name:$("#nn").value.trim(),dob:$("#nb").value,phone:$("#np").value.trim(),email:$("#ne").value.trim(),tier:$("#nt").value};
+ const labels={name:"full name",dob:"date of birth",phone:"phone",email:"email",tier:"membership tier"};
+ const missing=Object.keys(labels).filter(k=>!d[k]).map(k=>labels[k]);
+ if(missing.length) // Alternate course 6a/6b (missing)
+  return go("memberForm",{nd:d}, {type:"bad",text:"Required member information is missing.",sub:`Complete: ${missing.join(", ")}.`});
+ const bad=[];
+ if(d.dob>=TODAY) bad.push("date of birth must be in the past");
+ if(digits(d.phone).length!==10) bad.push("phone must have 10 digits");
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) bad.push("email must be a valid address (name@example.com)");
+ if(bad.length) // Alternate course 6a/6b (incorrect)
+  return go("memberForm",{nd:d}, {type:"bad",text:"Some member information is incorrect.",sub:`Please correct: ${bad.join("; ")}.`});
+ const dup=MEMBERS.find(m=>(m.name.toLowerCase()===d.name.toLowerCase()&&m.dob===d.dob)||m.email.toLowerCase()===d.email.toLowerCase()||digits(m.phone)===digits(d.phone));
+ if(dup) // Alternate course 6c/6d
+  return go("memberForm",{nd:d}, {type:"bad",text:"A member record already exists for this person.",sub:`Existing record: ${esc(dup.name)} (${dup.id}). A duplicate record was not created.`});
+ if($("#simErr5").checked) // Alternate course 8a/8b
+  return go("memberForm",{nd:d}, {type:"bad",text:"The member record could not be saved because of a technical error.",sub:"The registration was NOT completed. Please try again."});
+ const next=Math.max(...MEMBERS.map(m=>Number(m.id.slice(2))))+1; // Step 8: unique member ID
+ const rec={id:"M-"+next,name:d.name,tier:d.tier,age:ageOn(d.dob),dob:d.dob,phone:d.phone,email:d.email,joined:TODAY};
+ MEMBERS.push(rec);go("memberDone",{newMember:rec.id,nd:null});
+}
+function vMemberDone(){ // Step 9
+ const m=mem(S.sel.newMember);
+ return `<h1>Member registered</h1>
+ <div class="msg ok" role="status">${esc(m.name)} has been successfully registered.<small>Member ID ${m.id} · ${m.tier} tier · joined ${dayY(m.joined)}</small></div>
+ <button class="btn" onclick="go('memberForm',{nd:null})">Register Another Member</button><button class="btn secondary" onclick="go('members')">Back to Manage Members</button>`;
+}
+function vLookup(){ // Steps 10-11 (Shop Manager or Monitor)
+ const q=(S.sel.lq||"").toLowerCase();
+ const res=q?MEMBERS.filter(m=>m.name.toLowerCase().includes(q)||m.id.toLowerCase().includes(q)):[];
+ return `<div class="crumbs">Member Lookup</div><h1>Member Lookup</h1>${msgHTML()}
+ <div class="panel"><form onsubmit="event.preventDefault();go('lookup',{lq:$('#lq').value.trim()})">
+ <label for="lq">Search member by name or ID</label><input id="lq" value="${esc(S.sel.lq||"")}" placeholder="e.g. Jordan or M-1107">
+ <button class="btn" type="submit">Search</button>${S.sel.lq?`<button class="btn secondary" type="button" onclick="go('lookup',{lq:''})">Clear</button>`:""}</form></div>
+ ${q?(res.length?`<div class="panel scroll"><table class="table"><tr><th>Member</th><th>ID</th><th>Tier</th><th></th></tr>
+ ${res.map(m=>`<tr><td><strong>${esc(m.name)}</strong></td><td>${m.id}</td><td>${m.tier}</td><td><button class="btn secondary" style="margin:0" onclick="go('lookupMember',{lm:'${m.id}'})">Select</button></td></tr>`).join("")}</table></div>`
+ :`<div class="msg bad" role="alert">No matching members were found for “${esc(S.sel.lq)}”.<small>Enter a different name or member ID and search again.</small></div>`):""}`;
+}
+function vLookupMember(){ // Steps 12-13
+ const m=mem(S.sel.lm),certs=CERTS.filter(c=>c.member===m.id);
+ return `<div class="crumbs"><button class="linkbtn" onclick="go('lookup')">Member Lookup</button> › ${esc(m.name)}</div>
+ <h1>${esc(m.name)}</h1>
+ <div class="panel"><h2>Member information</h2><dl><dt>Member ID</dt><dd>${m.id}</dd><dt>Membership tier</dt><dd>${m.tier}</dd>
+ <dt>Date of birth</dt><dd>${dayY(m.dob)} (age ${m.age})${m.age<18?' <span class="pill bad">Under 18</span>':""}</dd>
+ <dt>Phone</dt><dd>${esc(m.phone)}</dd><dt>Email</dt><dd>${esc(m.email)}</dd><dt>Joined</dt><dd>${dayY(m.joined)}</dd>
+ <dt>Certifications</dt><dd>${certs.length?certs.map(c=>`<span class="pill ok">${mach(c.machine).name}</span>`).join(" "):'<span class="muted">None yet</span>'}</dd></dl>
+ <div><button class="btn secondary" onclick="go('lookup')">Back to search results</button></div></div>`;
+}
+
 /* ===================== RENDER ===================== */
 function render(){
  if(!S.user){$("#hdr").hidden=true;const G={waiverForm:vWaiverForm,waiverTerms:vWaiverTerms,waiverConfirm:vWaiverConfirm,waiverDone:vWaiverDone};$("#app").innerHTML=(G[S.view]||vLogin)();return;}
  $("#hdr").hidden=false;renderNav();
- const V={home:vHome,machines:vMachines,slots:vSlots,confirm:vConfirm,done:vDone,certSearch:vCertSearch,certMember:vCertMember,certDone:vCertDone,classes:vClasses,classDetail:vClassDetail,classDone:vClassDone,manageClasses:vManageClasses,classForm:vClassForm,classSaved:vClassSaved,waiverStatus:vWaiverStatus,recordVisit:vRecordVisit,visitorReview:vVisitorReview,visitDone:vVisitDone,visitRecords:vVisitRecords,accounts:vAccounts,accountDetail:vAccountDetail,maint:vMaint,maintMachine:vMaintMachine,maintForm:vMaintForm,maintDone:vMaintDone};
+ const V={home:vHome,machines:vMachines,slots:vSlots,confirm:vConfirm,done:vDone,certSearch:vCertSearch,certMember:vCertMember,certDone:vCertDone,classes:vClasses,classDetail:vClassDetail,classDone:vClassDone,manageClasses:vManageClasses,classForm:vClassForm,classSaved:vClassSaved,waiverStatus:vWaiverStatus,recordVisit:vRecordVisit,visitorReview:vVisitorReview,visitDone:vVisitDone,visitRecords:vVisitRecords,accounts:vAccounts,accountDetail:vAccountDetail,maint:vMaint,maintMachine:vMaintMachine,maintForm:vMaintForm,maintDone:vMaintDone,members:vMembers,memberForm:vMemberForm,memberDone:vMemberDone,lookup:vLookup,lookupMember:vLookupMember};
  $("#app").innerHTML=(V[S.view]||vHome)();
 }
 render();
