@@ -795,7 +795,7 @@ function vLookupMember(){ // Steps 12-13
  <dt>Date of birth</dt><dd>${dayY(m.dob)} (age ${m.age})${m.age<18?' <span class="pill bad">Under 18</span>':""}</dd>
  <dt>Phone</dt><dd>${esc(m.phone)}</dd><dt>Email</dt><dd>${esc(m.email)}</dd><dt>Joined</dt><dd>${dayY(m.joined)}</dd>
  <dt>Certifications</dt><dd>${certs.length?certs.map(c=>`<span class="pill ok">${mach(c.machine).name}</span>`).join(" "):'<span class="muted">None yet</span>'}</dd></dl>
- <div><button class="btn secondary" onclick="go('lookup')">Back to search results</button></div></div>`;
+ <div>${S.user.role==="Shop Manager"?`<button class="btn" onclick="go('certMember',{member:'${m.id}',cd:null})">Record Certification</button>`:""}<button class="btn secondary" onclick="go('lookup')">Back to search results</button></div></div>`;
 }
 
 /* ===================== RENDER ===================== */
